@@ -1,3 +1,4 @@
+flags.define.printPlots = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                           Model Parmeters                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -11,11 +12,10 @@ par.gamma   = 1e-4;
 par.invI    = par.I^-1;         % Inverse of inertia matrix
 par.l       = 0.086;            % Distance to rotor from center point [m]
 
-k           = [-1 -2];          % PD-Control parameters 
 par.F0      = par.m*par.g/4;    % Equilibrium point forces [kg*m*s^-2]
 %-------------------------------------------------------------------------%
 
-
+load('05_data\c_identification\bldc_nonLinearHammerWienerstein_v01.mat')
 
 
 coeffs      = [staticMap_escBLDC.coeffValues{:}];
@@ -35,13 +35,15 @@ par.mean    = staticMap_escBLDC.meanx;
 x           = 0:1000;
 y           = polyval(coeffs, (x-staticMap_escBLDC.meanx)/staticMap_escBLDC.stdx);
 
-figure
-plot(x,y)
-grid on
-hold on
-plot(x, linearTerm*x+(par.m/4-linearTerm*par.PWM0))
-jo = struct(nlhw1);
-plot(jo.OutputNonlinearity.Breakpoints(1,:)/250, jo.OutputNonlinearity.Breakpoints(2,:))
+if flags.define.printPlots
+    figure
+    plot(x,y)
+    grid on
+    hold on
+    plot(x, linearTerm*x+(par.m/4-linearTerm*par.PWM0))
+    jo = struct(nlhw1);
+    plot(jo.OutputNonlinearity.Breakpoints(1,:)/250, jo.OutputNonlinearity.Breakpoints(2,:))
+end
  
 par.CA      = [                  1                     1                    1                      1; ...
                    par.l/par.I(1,1)                    0     -par.l/par.I(1,1)                     0; ...

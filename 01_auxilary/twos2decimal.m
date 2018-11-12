@@ -1,5 +1,3 @@
-
-
 function [decimal] = twos2decimal(x)
 %  twos2decimal(data,bits)  convert 2s complement to decimal
 %                           data - single value or array to convert

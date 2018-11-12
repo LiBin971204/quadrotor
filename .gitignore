@@ -5,3 +5,5 @@
 10_work/*
 
 !.gitkeep
+
+.gitignore

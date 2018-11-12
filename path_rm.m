@@ -1,3 +1,5 @@
+% Remove paths needed by projcect
+
 projectRootDir = fileparts(mfilename('fullpath'));
 try 
     load('includePaths.mat');

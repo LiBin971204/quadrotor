@@ -1,0 +1,2 @@
+eclipse.preferences.version=1
+libraries=["Adafruit LSM9DS0 Library",{"package"\:"arduino","platform"\:"avr","library"\:"Wire"},{"package"\:"arduino","platform"\:"avr","library"\:"SPI"},"Adafruit Unified Sensor"]

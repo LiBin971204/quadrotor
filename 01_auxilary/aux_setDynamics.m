@@ -1,5 +1,5 @@
-function dyn = aux_setDynamics( dynamics )
-% function dyn = aux_setDynamics( dynamics )
+function Dyn = aux_setDynamics( dynamics )
+% function Dyn = aux_setDynamics( dynamics )
 %
 %   Author1    : 
 % 
@@ -11,7 +11,7 @@ function dyn = aux_setDynamics( dynamics )
 %
 %   Parameters :  dynamics -> Name of the system model
 % 
-%   Return     :  dyn -> Struct containing the system dynamics
+%   Return     :  Dyn -> Struct containing the system dynamics
 % 
 %   Examples of Usage: None
 
@@ -29,45 +29,67 @@ import casadi.*
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                          Set model parameters                           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-cmd_loadParameters  = ['par = ' dynamics '_par();']; 
-cmd_querySystemSize = ['[~,~,~,dyn] = ' dynamics '_dynamics();'];
+cmd_loadParameters  = ['parMdl = ' dynamics '_par();']; 
 eval(cmd_loadParameters);    % Load parameters
-eval(cmd_querySystemSize);    % Query sizes of DAE
+try
+    cmd_querySystemSize = ['[~,~,~,Dyn] = ' dynamics '_dynamics();'];
+    eval(cmd_querySystemSize);   % Query sizes of dynamic system
+catch
+    cmd_querySystemSize = ['[~,~,Dyn] = ' dynamics '_dynamics();'];
+    eval(cmd_querySystemSize);   % Query sizes of dynamic system
+end
 
 %-------------------------------------------------------------------------%
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                               Define DAE                                %
+%                          Define dynamic system                          %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TODO: Add option to switch between casadi and matlab syms symbolic variables for states, algebraic variables and controls
+% TODO: Online parameter necessary here? Rather mpc specific
 
 % SI-units
-xk      = MX.sym('xk', dyn.size.n_systemStates); 
-pk      = MX.sym('pk', dyn.size.n_algebraicVars);
-uk      = MX.sym('uk', dyn.size.n_controlInputs);    
-parOn   = MX.sym('parOn', dyn.size.n_parOn);
+x         = MX.sym('x', Dyn.Size.n_systemStates); 
+p         = MX.sym('p', Dyn.Size.n_algebraicVars);
+u         = MX.sym('u', Dyn.Size.n_controlInputs);    
+parOnline = MX.sym('parOnline', Dyn.Size.n_parOnline);
 
-% Rhs x_k+1=f(x_k, p_k, u_k), y_k=g(x_k, p_k, u_k) and 0=h(x_k, p_k, u_k)
-eval(['[xk1, yk, hk] = ' dynamics '_dynamics(xk, pk, uk, parOn, par);']);
+% Continuous: x_dot = f(x, p, u), y = g(x, p, u) and h(x, p, u) = 0
+% Discrete: xk1 = f(xk, pk, uk), yk = g(xk, pk, uk) and h(xk, pk, uk) = 0
+switch Dyn.type
+    case 'dae'
+        if Dyn.Size.n_parOnline~=0
+            eval(['[f, g, h] = ' dynamics '_dynamics(x, p, u, parMdl, parOnline);']);
+        else
+            eval(['[f, g, h] = ' dynamics '_dynamics(x, p, u, parMdl);']);
+        end
+    case 'ode'
+        if Dyn.Size.n_parOnline~=0
+            eval(['[f, g] = ' dynamics '_dynamics(x, u, parMdl, parOnline);']);
+        else
+            eval(['[f, g] = ' dynamics '_dynamics(x, u, parMdl);']);
+        end
+end
 
 % Define functions and store in struct
-dyn.systemDynamics ...
-    = Function([dyn.name '_systemDynamics'], ...
-      { xk ,  pk ,  uk ,  parOn}  , { xk1}, ...
-      {'xk', 'pk', 'uk', 'parOn'} , {'systemDynamics'});
+Dyn.systemDynamics ...
+    = Function([Dyn.name '_systemDynamics'], ...
+      { x ,  p ,  u ,  parOnline } , { f }, ...
+      {'x', 'p', 'u', 'parOnline'} , {'systemDynamics'});
 
-dyn.systemOutput ...
-    = Function([dyn.name '_systemOutput'], ...
-      { xk,   pk,   uk,   parOn}  , { yk}, ...
-      {'xk', 'pk', 'uk', 'parOn'} , {'systemOutput'});
+Dyn.systemOutput ...
+    = Function([Dyn.name '_systemOutput'], ...
+      { x,   p,   u,   parOnline } , { g }, ...
+      {'x', 'p', 'u', 'parOnline'} , {'systemOutput'});
 
-dyn.algebraicEquation ...
-    = Function([dyn.name '_algebraicEquation'], ...
-      { xk,   pk,   uk,   parOn}  , { hk}, ...
-      {'xk', 'pk', 'uk', 'parOn'} , {'algebraicEquation'});
+if strcmp(Dyn.type, 'dae')
+    Dyn.algebraicEquation ...
+        = Function([Dyn.name '_algebraicEquation'], ...
+        { x,   p,   u,   parOnline } , { h }, ...
+        {'x', 'p', 'u', 'parOnline'} , {'algebraicEquation'});
+end
 
-disp('dae set');
+disp('dynamics set');
 
 %-------------------------------------------------------------------------%

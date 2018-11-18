@@ -1,4 +1,4 @@
-function [vOut, mRotEuler] = rot_euler( vIn, vEulerAngles, direction, convention)
+function [vOut, mRotEuler] = rot_euler( vIn, eulerAngles, direction, convention)
 % function [vOut, mRotEuler] = rot_euler( eulerAngle, direction, convenction )
 %
 %   Author1     : 
@@ -9,7 +9,7 @@ function [vOut, mRotEuler] = rot_euler( vIn, vEulerAngles, direction, convention
 %                 specified sequence to body or to inertial frame
 %
 %   Parameters  : vIn -> Vector that is to be rotated
-%                 vEulerAngles -> Vector containing euler angles
+%                 eulerAngles -> Vector containing euler angles
 %                 direction -> Containts information whether rotate to
 %                              "to-body-frame" or "to-inertial-frame"
 %                 convention -> Containts information which rotation
@@ -21,9 +21,9 @@ function [vOut, mRotEuler] = rot_euler( vIn, vEulerAngles, direction, convention
 %-------------------------------------------------------------------------%
 
 % Get euler angels
-phi     = vEulerAngles(1);
-theta   = vEulerAngles(2);
-psi     = vEulerAngles(3);
+phi     = eulerAngles(1);
+theta   = eulerAngles(2);
+psi     = eulerAngles(3);
 
 % Set convention to 'xyz' if not specified
 if nargin==3

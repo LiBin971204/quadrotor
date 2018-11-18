@@ -1,17 +1,17 @@
 function Dyn = aux_setDynamics( dynamics )
 % function Dyn = aux_setDynamics( dynamics )
 %
-%   Author1    : 
+%   Author1     :
 % 
-%   Date       :  Winter 2018
+%   Date        : Winter 2018
 %
-%   Description:  Create a Struct containing the system dynamics of the 
+%   Description : Create a Struct containing the system dynamics of the 
 %                 model indicated by dynamics (the model must comply with 
 %                 the naming convection
 %
-%   Parameters :  dynamics -> Name of the system model
+%   Parameters  : dynamics -> Name of the system model
 % 
-%   Return     :  Dyn -> Struct containing the system dynamics
+%   Return      : Dyn -> Struct containing the system dynamics
 % 
 %-------------------------------------------------------------------------%
 

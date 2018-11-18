@@ -63,13 +63,14 @@ else
     cpsi = cos(psi);
     %TODO: Get info about torque
     dm1  = Par_mdlQuad.gamma;
-    dm2  = -Par_mdlQuad.gamma;
-    dm3  = Par_mdlQuad.gamma;
+    dm2  = Par_mdlQuad.gamma;
+    dm3  = -Par_mdlQuad.gamma;
     dm4  = -Par_mdlQuad.gamma;
 
 
     % Calculate A
     dfdx_geo = zeros(12, 3);
+    
     dfdv_rel ...
         = [cthe*cpsi    sphi*sthe*cpsi-cphi*spsi  cphi*sthe*cpsi+sphi*spsi;
            cthe*spsi    sphi*sthe*spsi+cphi*cpsi  cphi*sthe*spsi-sphi*cpsi;
@@ -77,7 +78,7 @@ else
                    0                           r                        -q; 
                   -r                           0                         p;
                    q                          -p                         0;
-                                                                zeros(6,3)];
+                                       zeros(6,3)                         ];
        
     dfdeuler ...
         = [(sphi*spsi+cphi*sthe*cpsi)*v+(cphi*spsi-sphi*sthe*cpsi)*w ...
@@ -103,9 +104,10 @@ else
                                    1      sphi*tan(theta)      cphi*tan(theta);
                                    0                 cphi                -sphi;
                                    0            sphi/cthe            cphi/cthe;
-          (-I(3,1)*q+I(2,1)*r)/I(1,1) (-2*I(3,2)*q+I(2,2)*r)/I(1,1) (-I(3,3)*q+2*I(2,3)*r)/I(1,1);
-        (-I(1,1)*r+2*I(3,1)*p)/I(2,2) ( -I(1,2)*r+I(3,2)*p)/I(2,2)  (-2*I(1,3)*r+I(3,3)*p)/I(2,2);
-        (-2*I(2,1)*p+I(1,1)*q)/I(3,3) (-I(2,2)*p+2*I(1,2)*q)/I(3,3) ( -I(2,3)*p+I(1,3)*q)/I(3,3)];
+          Par_mdlQuad.invI*...
+          [  -I(3,1)*p+I(2,1)*r                    -I(3,2)*q-I(3,1)*p+(I(2,2)-I(3,3))*r I(2,1)*p+(I(2,2)-I(3,3))*q+2*I(2,3)*r
+            2*I(3,1)*p+I(3,2)*q+(I(3,3)-I(1,1))*r                    -I(1,2)*r+I(3,2)*p (I(3,3)-I(1,1))*p-I(1,2)*q-2*I(1,2)*r
+           -2*I(2,1)*p+(I(1,1)-I(2,2))*q-I(2,3)*r (I(1,1)-I(2,2))*p+2*I(1,2)*q+I(1,3)*r -I(2,3)*p+I(1,3)*q]];
        
     DynamicsLin.mA = [dfdx_geo dfdv_rel dfdeuler dfdomega];
     
@@ -113,9 +115,10 @@ else
     DynamicsLin.mB = [zeros(5,4)
           1/m*ones(1,4)
           zeros(3,4)
-            l/I(1,1)          0   -l/I(1,1)          0 
-                  0     l/I(2,2)         0    -l/I(2,2)
-          dm1/I(3,3) -dm2/I(3,3) dm3/I(3,3) -dm4/I(3,3)];
+          Par_mdlQuad.invI*...
+          [l    0   -l    0 
+           0    l    0   -l
+           dm1 dm2 dm3 dm4]];
       % TODO: Adapt thrust direction to notes
     
     % Set C

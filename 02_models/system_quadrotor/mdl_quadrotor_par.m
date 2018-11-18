@@ -1,5 +1,5 @@
-function [Par_mdlQuad, Par_mdlQuadLin] = mdl_quadrotor_par( )
-% function [Par_mdlQuad, Par_mdlQuadLin] = mdl_quadrotor_par( )
+function Par_mdlQuad = mdl_quadrotor_par( )
+% function Par_mdlQuad = mdl_quadrotor_par( )
 %
 %   Date        :   Winter 2018
 %
@@ -8,7 +8,7 @@ function [Par_mdlQuad, Par_mdlQuadLin] = mdl_quadrotor_par( )
 % 
 %   Parameters  : 	None
 % 
-%   Return      : 	Par_mdlQuad - a struct which contains the parameters
+%   Return      : 	Par_mdlQuad -> Struct containing model parameters
 % 
 %-------------------------------------------------------------------------%
 
@@ -67,20 +67,3 @@ Par_mdlQuad.ca = [                  1                     1                    1
                    Par_mdlQuad.l/Par_mdlQuad.I(1,1)                    0     -Par_mdlQuad.l/Par_mdlQuad.I(1,1)                     0; ...
                                  0       Par_mdlQuad.l/Par_mdlQuad.I(2,2)                    0     -Par_mdlQuad.l/Par_mdlQuad.I(2,2); ...
                Par_mdlQuad.gamma/Par_mdlQuad.I(3,3) -Par_mdlQuad.gamma/Par_mdlQuad.I(3,3) Par_mdlQuad.gamma/Par_mdlQuad.I(3,3) -Par_mdlQuad.gamma/Par_mdlQuad.I(3,3)];
-
-           
-% Linearized system
-Par_mdlQuadLin.Ap  = [0 1; 0 0];
-Par_mdlQuadLin.Bp  = [0 0 0 0; Par_mdlQuad.l/Par_mdlQuad.I(1,1) 0 -Par_mdlQuad.l/Par_mdlQuad.I(1,1) 0]*linearTerm;
-
-Par_mdlQuadLin.Aq  = [0 1; 0 0];
-Par_mdlQuadLin.Bq  = [0 0 0 0; 0 Par_mdlQuad.l/Par_mdlQuad.I(2,2) 0 -Par_mdlQuad.l/Par_mdlQuad.I(2,2)]*linearTerm;
-
-Par_mdlQuadLin.Ar  = [0 1; 0 0];
-Par_mdlQuadLin.Br  = [0 0 0 0; Par_mdlQuad.gamma/Par_mdlQuad.I(1,1) -Par_mdlQuad.gamma/Par_mdlQuad.I(1,1) Par_mdlQuad.gamma/Par_mdlQuad.I(1,1) -Par_mdlQuad.gamma/Par_mdlQuad.I(1,1)]*linearTerm;
-
-Par_mdlQuadLin.Az  = [0 1; 0 0];
-Par_mdlQuadLin.Bz  = [0 0 0 0; 1 1 1 1]*linearTerm;
-
-Par_mdlQuadLin.C   = [1 0;0 1];
-Par_mdlQuadLin.D   = zeros(2,4);

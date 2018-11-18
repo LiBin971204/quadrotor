@@ -42,7 +42,7 @@ end
 x_lin = zeros(Ode_lin.Size.n_states, length(t_sim));
 % y_lin = zeros(Ode_lin.Size.n_outputs, length(t_sim));
 
-Flags.Define.linearSim_withCasadi = 1;
+Flags.Define.linearSim_withCasadi = 0;
 switch Flags.Define.linearSim_withCasadi
     case true
         import casadi.*

@@ -10,271 +10,294 @@ clear; close all; clc;
 %-------------------------------------------------------------------------%
 
 % Set options
-Specs.functionName                = 'mdl_actuator_thrust';
-Specs.date                        = '2018-07-04';
-Dirs.loadData                     = ['05_data/a_measurement/ident_esc-bldc_' Specs.date '/'];
-Dirs.saveData                     = '05_data/c_identification/ident_esc-bldc/';
-Dirs.saveFun                      = '02_models/actuator_esc-bldc/';
+Specs.functionName  = 'mdl_actuator_thrust';
+Specs.date          = '2018-07-04';
+Specs.sampleTime    = 0.004;
+Dirs.loadData       = ['05_data/a_measurement/ident_esc-bldc_' Specs.date '/'];
+% Dirs.saveData       = '05_data/c_identification/ident_esc-bldc/';
+Dirs.saveFun        = '02_models/actuator_esc-bldc/';
 
-Par_matlabCurveFit(1).Options        ...
-    = fitoptions( 'Method', 'LinearLeastSquares' );
+% Fit options for model mass = f(sensor output)
+MatlabCurveFit(1).Options        ...
+    = fitoptions( 'Method', 'LinearLeastSquares', ...
+                  'Normalize', 'off', ...
+                  'Robust', 'Bisquare');
 
-Par_matlabCurveFit(1).Options.Robust ...
-    = 'Bisquare';
-
-Par_matlabCurveFit(1).modelType ...
+MatlabCurveFit(1).modelType ...
     = fittype( 'poly1' );
 
+% Fit options for static map mass = f(pwm)
+MatlabCurveFit(2).Options        ...
+    = fitoptions( 'Method', 'LinearLeastSquares', ...
+                  'Normalize', 'off', ...
+                  'Robust', 'Bisquare');
+
+MatlabCurveFit(2).modelType ...
+    = fittype( 'poly3' );
+
+% Fit options for dynamic model mass_dot = f(pwm)
+MatlabIdent.modelType = 'Wiener-Hammerstein';
+MatlabIdent.inputNonlinearity = poly1d;
+MatlabIdent.outputNonlinearity = 'unitgain';
+MatlabIdent.modelOrder = [1 1 0]; % n_zeros+1, n_poles, n_delay
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                Load and preprocess measurement data                     %
+%                  Fit calibration curve for sensor                       %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if exist([Dirs.saveData 'identData_actuator_thrust.mat'], 'file')==2  
-    load([Dirs.saveData 'identData_actuator_thrust.mat'])
+% Load calibration data 
+[Data_sensorCalibration.sensorOutput, Data_sensorCalibration.mass] ...
+    = ident_escbldc_sensorCalibration( Specs.date );
+
+% Fit model
+Result_matlabCurveFit(1).fitMatlab ...
+    = fit( Data_sensorCalibration.sensorOutput, Data_sensorCalibration.mass, ...
+           MatlabCurveFit(1).modelType, ...
+           MatlabCurveFit(1).Options );
+
+% Visualize resulting fit
+figure;
+plot(Data_sensorCalibration.sensorOutput, Data_sensorCalibration.mass,'.')
+hold on
+plot(0:250, Result_matlabCurveFit(1).fitMatlab(0:250))
+grid on
+xlabel('Sensor output in ?')
+ylabel('Mass in kg')
+legend('Measured data', 'Polynomial fit')
+title('Sensor characteristics')
+
+%-------------------------------------------------------------------------%
     
-else
-    % Load calibration
-    [SensorCalibration.sensorOutput, SensorCalibration.mass] ...
-        = ident_escbldc_sensorCalibration( Specs.date );
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                       Fit static map (pwm - mass)                       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Load measurement data of each bldc motor (recorded using same esc)
+for ii = 1:4
+    buff = dlmread(['ident' num2str(ii) '4.csv'],';');
+    Data_measurement(ii).num_bldc = ii;
+    Data_measurement(ii).num_esc  = 1;
+    Data_measurement(ii).time     = buff(:,1)/1000;
+    Data_measurement(ii).pwm      = buff(:,2)/1000 - 1; % Scale
+    Data_measurement(ii).sensorOutput = buff(:,3)/1000;
+    Data_measurement(ii).mass_raw = Result_matlabCurveFit(1).fitMatlab(buff(:,3)/1000);
     
-    Result_matlabCureFit(1).fitMatlab ...
-        = fit( SensorCalibration.sensorOutput, SensorCalibration.mass, ...
-               Par_matlabCurveFit(1).modelType, ...
-               Par_matlabCurveFit(1).Options );
+    % Convert sensor signal to mass with identified model and take out
+    % measurement imperfections
+    offset_outputThrust ...
+        = max(Result_matlabCurveFit(1).fitMatlab(buff(1:20,3)/1000));
     
-    SensorCalibration.figure = figure;
-    plot(SensorCalibration.sensorOutput, SensorCalibration.mass,'.')
-    hold on
-    plot(0:250, Result_matlabCureFit(1).fitMatlab(0:250))
-    xlabel('Sensor output in ?')
-    ylabel('Mass in kg')
+    Data_measurement(ii).mass     ...
+        = Result_matlabCurveFit(1).fitMatlab(buff(:,3)/1000) - offset_outputThrust;
     
-    % Load measurement data of eac bldc motor (recorded using same esc)
-    offset_outputThrust = [37; 34; 25; 5];
-    for ii = 1:4
-        buff = dlmread(['ident' num2str(ii) '4.csv'],';');
-        Data_measurement(ii).num_bldc = ii;
-        Data_measurement(ii).num_esc  = 1;
-        Data_measurement(ii).time     = buff(:,1);
-        Data_measurement(ii).pwm      = buff(:,2) - 1000; % Substract offset
-        Data_measurement(ii).sensorOutput = buff(:,3);
-        Data_measurement(ii).mass     = 4.818*buff(:,3)/1000 - 193.4 - offset_outputThrust(ii);
-    end
-
-    % Get static map
-    limits = [ 3000  4000;  5000  6000;  7000  8000;  9000 10000; 11000 12000; ...
-              13000 14000; 15000 16000; 17000 18000; 19000 20000; 21000 21500].';
+    offset_outputThrust ...
+        = max(Result_matlabCurveFit(1).fitMatlab(buff(end-16:end,3)/1000));
     
-    x = 0;
-    y = 0;
-    for ii = 1:size(limits,2)
-        for jj = 1:4
-            ind = Data_measurement(jj).time>=limits(1,ii) & Data_measurement(jj).time<=limits(2,ii);
-            x = [x; mean(Data_measurement(jj).pwm(ind))];
-            y = [y; mean(Data_measurement(jj).mass(ind))];
-        end
-    end
-
-
-    % Visualize
-    figure
-
-    subplot(3,1,1)
-    grid on
-    hold on
-    for ii = 1:4
-        plot(Data_measurement(ii).time/1000, Data_measurement(ii).pwm)
-    end
-    legend('Motor1 - ESC4', 'Motor2 - ESC4', 'Motor3 - ESC4', 'Motor4 - ESC4', 'Location', 'Northwest')
-
-    subplot(3,1,2)
-    grid on
-    hold on
-    for ii = 1:4
-        plot(Data_measurement(ii).time/1000, Data_measurement(ii).mass)
-    end
-    legend('Motor1 - ESC4', 'Motor2 - ESC4', 'Motor3 - ESC4', 'Motor4 - ESC4', 'Location', 'Northwest')
-
-
-    subplot(3,1,3)
-    hold on
-    grid on
-    plot(x, y, 'o--')
-    ylim([0 600])
-
+    Data_measurement(ii).mass(end-16:end) ...
+        = Result_matlabCurveFit(1).fitMatlab(buff(end-16:end,3)/1000) - offset_outputThrust;
     
-%     % Store extracted data
-%     save([Dirs.saveData 'identData_actuator_thrust'], 'ParFit');
+    ind = Data_measurement(ii).mass < 0;
+    Data_measurement(ii).mass(ind) = 0;
     
 end
 
-%-------------------------------------------------------------------------%
+% Get static map
+% Manually set time windows in which step response reached steady state
+limits = [ 3  4;  5  6;  7  8;  9 10; 11 12; ...
+          13 14; 15 16; 17 18; 19 20; 21 21.5].';
 
-load('staticMap_escBLDC')
+pwm_steadyState = [];
+mass_steadyState = [];
+for ii = 1:size(limits,2)
+    for jj = 1:4
+        ind = Data_measurement(jj).time>=limits(1,ii) & Data_measurement(jj).time<=limits(2,ii);
+        pwm_steadyState ...
+            = [pwm_steadyState; mean(Data_measurement(jj).pwm(ind))];
+        mass_steadyState ...
+            = [mass_steadyState; mean(Data_measurement(jj).mass(ind))];
+    end
+end
 
-esc4bldc1 = dlmread('IDENT14.csv',';');
-esc4bldc2 = dlmread('IDENT24.csv',';');
-esc4bldc3 = dlmread('IDENT34.csv',';');
-esc4bldc4 = dlmread('IDENT44.csv',';');
-
-
-% Scale signals
-esc4bldc1(:,2)       = esc4bldc1(:,2) - 1000;
-esc4bldc2(:,2)       = esc4bldc2(:,2) - 1000;
-esc4bldc3(:,2)       = esc4bldc3(:,2) - 1000;
-esc4bldc4(:,2)       = esc4bldc4(:,2) - 1000;
-esc4bldc1(:,3)       = 4.818*esc4bldc1(:,3)/1000-193.4 - 37;
-esc4bldc2(:,3)       = 4.818*esc4bldc2(:,3)/1000-193.4 - 34;
-esc4bldc3(:,3)       = 4.818*esc4bldc3(:,3)/1000-193.4 - 25;
-esc4bldc4(:,3)       = 4.818*esc4bldc4(:,3)/1000-193.4 - 5;
-
-
-% Resampling
-e4b1_resamp(:,1)     = 0:1:esc4bldc1(end,1);
-e4b2_resamp(:,1)     = 0:1:esc4bldc2(end,1);
-e4b3_resamp(:,1)     = 0:1:esc4bldc3(end,1);
-e4b4_resamp(:,1)     = 0:1:esc4bldc4(end,1);
-
-e4b1_resamp(:,2)     = interp1(esc4bldc1(:,1), esc4bldc1(:,2), e4b1_resamp(:,1)).';
-e4b1_resamp(:,3)     = interp1(esc4bldc1(:,1), esc4bldc1(:,3), e4b1_resamp(:,1)).';
-e4b2_resamp(:,2)     = interp1(esc4bldc2(:,1), esc4bldc2(:,2), e4b2_resamp(:,1)).';
-e4b2_resamp(:,3)     = interp1(esc4bldc2(:,1), esc4bldc2(:,3), e4b2_resamp(:,1)).';
-e4b3_resamp(:,2)     = interp1(esc4bldc3(:,1), esc4bldc3(:,2), e4b3_resamp(:,1)).';
-e4b3_resamp(:,3)     = interp1(esc4bldc3(:,1), esc4bldc3(:,3), e4b3_resamp(:,1)).';
-e4b4_resamp(:,2)     = interp1(esc4bldc4(:,1), esc4bldc4(:,2), e4b4_resamp(:,1)).';
-e4b4_resamp(:,3)     = interp1(esc4bldc4(:,1), esc4bldc4(:,3), e4b4_resamp(:,1)).';
+% Fit steady state data
+Result_matlabCurveFit(2).fitMatlab ...
+    = fit( pwm_steadyState, mass_steadyState, ...
+           MatlabCurveFit(2).modelType, ...
+           MatlabCurveFit(2).Options );
 
 % Visualize
 figure
-subplot(3,1,1)
-plot(e4b1_resamp(:,1)/1000, e4b1_resamp(:,2))
-grid on
+subplot(2,1,1)
+plot([Data_measurement.time], [Data_measurement.mass])
 hold on
-plot(e4b2_resamp(:,1)/1000, e4b2_resamp(:,2))
-plot(e4b3_resamp(:,1)/1000, e4b3_resamp(:,2))
-plot(e4b4_resamp(:,1)/1000, e4b4_resamp(:,2))
-
-
-subplot(3,1,2)
-plot(e4b1_resamp(:,1)/1000, e4b1_resamp(:,3))
+plot([Data_measurement.time], [Data_measurement.mass_raw] )
 grid on
+title('Original vs. postprocessed data')
+
+
+subplot(2,1,2)
+plot(pwm_steadyState, mass_steadyState, '.')
 hold on
-plot(e4b2_resamp(:,1)/1000, e4b2_resamp(:,3))
-plot(e4b3_resamp(:,1)/1000, e4b3_resamp(:,3))
-plot(e4b4_resamp(:,1)/1000, e4b4_resamp(:,3))
-ylim([0 600])
+plot(0:0.1:1, Result_matlabCurveFit(2).fitMatlab(0:0.1:1))
+grid on
+xlabel('PWM in -')
+ylabel('Mass in kg')
+title('Static map')
+legend('Measured data', 'Polynomial fit')
 
-u_ident = [e4b1_resamp(:,2); e4b2_resamp(:,2); e4b3_resamp(:,2); e4b4_resamp(:,2)];
-y_ident = [e4b1_resamp(:,3); e4b2_resamp(:,3); e4b3_resamp(:,3); e4b4_resamp(:,3)]/1000;
+clear pwm_steadyState mass_steadyState ii jj ind limits buff ...
+      offset_outputThrust
+
+%-------------------------------------------------------------------------%
 
 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %                     Preprocess and visualize data                       %
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [FilterCoefficients.b, FilterCoefficients.a] = butter(10, 0.2);
-% Tbd_filt   = filtfilt(FilterCoefficients.b, FilterCoefficients.a, ParFit.Tbd);
-% Yexg_filt  = filtfilt(FilterCoefficients.b, FilterCoefficients.a, ParFit.Yexg);
-% 
-% figure
-% aux_plotSize(15, 10, 32, 15, 2, 2, 1, 1)
-% 
-% subplot(3,1,1)
-% plot(ParFit.cycles, ParFit.alpha_evc)
-% grid on
-% ylabel('\alpha_{evc, set} in °CA aTDC')
-% 
-% subplot(3,1,2)
-% plot(ParFit.cycles, ParFit.Tbd)
-% hold on
-% plot(ParFit.cycles, Tbd_filt)
-% grid on
-% ylabel('T_{bd} in K')
-% 
-% subplot(3,1,3)
-% plot(ParFit.cycles, ParFit.Yexg)
-% hold on
-% plot(ParFit.cycles, Yexg_filt)
-% grid on
-% ylabel('Y_{exg} in kg')
-% xlabel('Cycle in -')
-% 
-% % TODO: Scale data
-% 
-% %-------------------------------------------------------------------------%
-% 
-% 
-% 
-% 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %                              Fit Data                                   %
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% % NOTE: What is Par_matlabCurveFit.Options.Weights = weightsmRed;
-% 
-% ParFit.fitMatlab = fit( [ParFit.alpha_evc, ParFit.Tbd], ParFit.Yexg, ...
-%                         Par_matlabCurveFit.modelType, ...
-%                         Par_matlabCurveFit.Options );
-% 
-% % Get model, coefficients and names from fit
-% ParFit.model             = formula(ParFit.fitMatlab);
-% ParFit.coefficientNames  = coeffnames(ParFit.fitMatlab);
-% ParFit.coefficientValues = coeffvalues(ParFit.fitMatlab);
-% 
-% % Adapt model for function
-% ParFit.model = strrep(ParFit.model, 'x', 'alpha_evc');
-% ParFit.model = strrep(ParFit.model, 'y', 'Tbd');
-% 
-% % Replace model coefficients by their values
-% for ii = 1:length(ParFit.coefficientNames)
-%     ParFit.model = strrep(ParFit.model, ParFit.coefficientNames{ii}, ...
-%                           num2str(ParFit.coefficientValues(ii)));
-% end
-% 
-% % Generate function
-% fid = fopen([Dirs.saveFun Spec.functionName '.m'], 'wt');
-% fprintf(fid, ['function F = ' Spec.functionName '( pwm ) \n']);
-% fprintf(fid, ['%% function F = ' Spec.functionName '( pwm ) \n']);
-% fprintf(fid, '%%\n');
-% fprintf(fid, '%%   Author1     : \n');
-% fprintf(fid, '%%\n');
-% fprintf(fid, '%%   Date        : Winter 2018\n');
-% fprintf(fid, '%%\n');
-% fprintf(fid, '%%   Description : Submodel for esc-bldc dynamics\n');
-% fprintf(fid, '%%\n');
-% fprintf(fid, '%%   Parameters  : pwm -> Pulse-width modulated signal\n');
-% fprintf(fid, '%% \n');
-% fprintf(fid, '%% \n');
-% fprintf(fid, '%%   Return      : F -> Motor thrust\n');
-% fprintf(fid, '%%\n');
-% fprintf(fid, '%%   This function was autogenerated by 04_identification/...\n');
-% fprintf(fid, '%%   ...actuator_esc-bldc/ident_acutator_thrust.m \n');
-% fprintf(fid, '%%\n');
-% fprintf(fid, '%%-------------------------------------------------------------------------%%\n\n');
-% fprintf(fid, ['F = ' ParFit.model ';']);
-% fclose(fid);
-% 
-% clear ii fid ans
-% 
-% %-------------------------------------------------------------------------%
-% 
-% 
-% 
-% 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %                           Visualize result                              %
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [xg, yg] = meshgrid(260:1:280, 0:100:2000);
-% 
-% figure
-% aux_plotSize(15, 10, 32, 2, 2, 2, 1, 1)
-% plot3(ParFit.alpha_evc, ParFit.Tbd, ParFit.Yexg, '.')
-% hold on
-% mesh(xg, yg, mdlSub_discreteCycle_Yexg(xg, yg))
-% grid on
-% xlabel('\alpha_{evc, set} in °CA aTDC')
-% ylabel('T_{bd} in K')
-% zlabel('Y_{exg} in kg')
-% zlim([0 1])
-% clear xg yg
-% 
-% %-------------------------------------------------------------------------%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                     Fit dynamic system behavior                         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Resampling
+
+MatlabIdent.time = 0;
+MatlabIdent.pwm  = [];
+MatlabIdent.mass = [];
+for ii = 1:4
+    Data_measurement(ii).time_resampled ...
+        = (0:Specs.sampleTime:Data_measurement(ii).time(end)).';
+
+    Data_measurement(ii).pwm_resampled ...
+        = interp1(Data_measurement(ii).time, Data_measurement(ii).pwm, ...
+                  Data_measurement(ii).time_resampled);
+
+    Data_measurement(ii).mass_resampled ...
+        = interp1(Data_measurement(ii).time, Data_measurement(ii).mass, ...
+                  Data_measurement(ii).time_resampled);
+              
+    MatlabIdent.time = [MatlabIdent.time; MatlabIdent.time(end)+Data_measurement(ii).time_resampled];
+    MatlabIdent.pwm  = [MatlabIdent.pwm; Data_measurement(ii).pwm_resampled];
+    MatlabIdent.mass = [MatlabIdent.mass; Data_measurement(ii).mass_resampled];
+end
+MatlabIdent.time(1) = [];
+
+
+% Identify dynamic behavior
+MatlabIdent.inputNonlinearity.Coefficients ...
+    = [Result_matlabCurveFit(2).fitMatlab.p1 ...
+       Result_matlabCurveFit(2).fitMatlab.p2 ...
+       Result_matlabCurveFit(2).fitMatlab.p3 ...
+       Result_matlabCurveFit(2).fitMatlab.p4];
+
+MatlabIdent.identifiedModel ...
+    = nlhw( iddata(MatlabIdent.mass, MatlabIdent.pwm, Specs.sampleTime), ...
+            MatlabIdent.modelOrder, ...
+            MatlabIdent.inputNonlinearity, ...
+            MatlabIdent.outputNonlinearity );
+        
+simOut = sim(MatlabIdent.identifiedModel, MatlabIdent.pwm);
+
+
+% Visualize
+figure
+subplot(2,1,1)
+plot(MatlabIdent.time, MatlabIdent.mass)
+hold on
+grid on
+plot(MatlabIdent.time, simOut)
+title('Output')
+xlabel('Time in s')
+ylabel('Thrust in kg')
+
+subplot(2,1,2)
+plot(MatlabIdent.time, MatlabIdent.pwm)
+grid on
+title('Input')
+xlabel('Time in s')
+ylabel('PWM in -')
+
+clear ii simOut
+
+%-------------------------------------------------------------------------%
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                       Store model as function                           %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% NOTE: What is Par_matlabCurveFit.Options.Weights = weightsmRed;
+% jo = sys.OutputNonlinearity.Coefficients;
+% plot(0:0.1:1, polyval(jo, 0:0.1:1))
+
+
+% Generate input nonlinearity function
+coefs = MatlabIdent.identifiedModel.InputNonlinearity.Coefficients;
+
+fid = fopen([Dirs.saveFun Specs.functionName '.m'], 'wt');
+fprintf(fid, ['function F_static = ' Specs.functionName '( pwm ) \n']);
+fprintf(fid, ['%% function F_static = ' Specs.functionName '( pwm ) \n']);
+fprintf(fid, '%%\n');
+fprintf(fid, '%%   Author1     : \n');
+fprintf(fid, '%%\n');
+fprintf(fid, '%%   Date        : Winter 2018\n');
+fprintf(fid, '%%\n');
+fprintf(fid, '%%   Description : Submodel for esc-bldc dynamics\n');
+fprintf(fid, '%%\n');
+fprintf(fid, '%%   Parameters  : pwm -> Pulse-width modulated signal\n');
+fprintf(fid, '%% \n');
+fprintf(fid, '%% \n');
+fprintf(fid, '%%   Return      : F_static -> Motor thrust from static map\n');
+fprintf(fid, '%%\n');
+fprintf(fid, '%%   This function was autogenerated by 04_identification/...\n');
+fprintf(fid, '%%   ...actuator_esc-bldc/ident_acutator_thrust.m \n');
+fprintf(fid, '%%\n');
+fprintf(fid, '%%-------------------------------------------------------------------------%%\n\n');
+fprintf(fid, 'g = 9.81; %% Gravity [m/s^2]\n');
+fprintf(fid, ['F_static = g * (' num2str(coefs(1)) '.*pwm.^3 + ' ...
+                            num2str(coefs(2)) '.*pwm.^2 + ', ...
+                            num2str(coefs(3)) '.*pwm + ' num2str(coefs(4)) ');']);
+fclose(fid);
+
+% Generate parameter function
+coefs = getpvec(MatlabIdent.identifiedModel.LinearModel);
+fid = fopen([Dirs.saveFun Specs.functionName '_par.m'], 'wt');
+fprintf(fid, ['function Par = ' Specs.functionName '_par( ) \n']);
+fprintf(fid, ['%% function Par = ' Specs.functionName '_par( ) \n']);
+fprintf(fid, '%%\n');
+fprintf(fid, '%%   Author1     : \n');
+fprintf(fid, '%%\n');
+fprintf(fid, '%%   Date        : Winter 2018\n');
+fprintf(fid, '%%\n');
+fprintf(fid, '%%   Description : Submodel for esc-bldc dynamics\n');
+fprintf(fid, '%%\n');
+fprintf(fid, '%%   Parameters  : \n');
+fprintf(fid, '%% \n');
+fprintf(fid, '%%   Return      : Par -> Struct containing dynamic model parameters\n');
+fprintf(fid, '%%\n');
+fprintf(fid, '%%   This function was autogenerated by 04_identification/...\n');
+fprintf(fid, '%%   ...actuator_esc-bldc/ident_acutator_thrust.m \n');
+fprintf(fid, '%%\n');
+fprintf(fid, '%%-------------------------------------------------------------------------%%\n\n');
+fprintf(fid, ['Par.linearModelCoefs = [' num2str(coefs(1)) '; ' ...
+                                         num2str(coefs(2)) '];\n']);
+fprintf(fid, ['Par.sampleTime = ' num2str(MatlabIdent.identifiedModel.Ts) ';']);
+fclose(fid);
+
+figure
+plot(0:0.1:1, Result_matlabCurveFit(2).fitMatlab(0:0.1:1))
+hold on
+plot(0:0.1:1, mdl_actuator_thrust( 0:0.1:1)*55/9.81)
+grid on
+xlabel('PWM in -')
+ylabel('Mass in kg')
+title('Static map')
+legend('Polynomial fit', 'Estimated input nonlinearity*55')
+
+clear ii fid ans coefs
+
+%-------------------------------------------------------------------------%

@@ -16,5 +16,5 @@ function Par = mdl_actuator_thrust_par( )
 %
 %-------------------------------------------------------------------------%
 
-Par.linearModelCoefs = [1; -0.98216];
-Par.sampleTime = 0.004;
+Par.linearModelCoefs = [1; -0.68932];
+Par.sampleTime = 0.1;

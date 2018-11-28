@@ -1,0 +1,337 @@
+\section{Control Design}
+\subsection{Methodology}
+\begin{enumerate}
+	\item Study the system (plant) to be controlled and obtain initial information about the control objectives
+	\item Model the system and simplify the model, if necessary
+		\begin{enumerate}
+			\item Identification of the input and output variables of the process
+			\item Identify the dependencies of each variable, starting with the output, until the system only depends on input variables
+			\item Identify the transmission behaviour between the signals
+		\end{enumerate}
+	\item Scale the variables and analyze the resulting model; determine its properties
+	\item Decide which variables are to be controlled (controlled outputs)
+	\item Decide on the measurements and manipulated variables: what sensors and actuators will be used and where will they be placed?
+	\item Select the control configuration
+	\item Decide on the type of controller to be used
+	\item Decide on performance specifications, based on the overall control objectives
+	\item Design a controller
+	\item Analyze the resulting controlled system to see if the specifications are satisfied; and if they are not satisfied modify the specificiations or the type of controller
+	\item Simulate the resulting controlled system, either on a computer or a pilot plant
+	\item Repeat from step 2, if necessary
+	\item Choose hardware and software and implement the controller
+	\item Test and validate the control system, and tune the controller on-line, if necessary
+\end{enumerate}
+
+
+
+		
+\subsection{Control Objectives}
+1. Tilt control \\
+2. Height control 
+\clearpage
+
+\subsection{System Model}
+\begin{figure}[htb!]
+	\centering
+	\includegraphics[width=0.7\textwidth]{01_figures/intro_basicSystem}
+	\caption{Basic system structure}
+	\label{fig:intro_basicSystem}
+\end{figure}
+\clearpage
+
+\begin{figure}[htb!]
+	\centering
+	\includegraphics[width=0.5\textwidth]{01_figures/intro_cosChoice}
+	\caption{Choice of coordinate system}
+	\label{fig:intro_cos}
+\end{figure}
+
+Geodetical x,y,z-position
+\begin{align*}
+	\vec{x} &= \begin{pmatrix} x \\	y \\ z \end{pmatrix}
+\intertext{Absolute velocity in x,y,z-direction of the body frame}
+	\vec{v} &= \begin{pmatrix} u \\ v \\ w \end{pmatrix}
+\intertext{Euler Angles}
+	\vec{\Phi} &= \begin{pmatrix} \Phi \\ \Theta \\ \Psi \end{pmatrix}
+\intertext{Rotational speed around x,y,z-axis of the body frame}
+	\vec{\omega} &= \begin{pmatrix} p \\ q \\ r \end{pmatrix}
+\intertext{PWM signal for electronic speed controller (ESC)}
+	\vec{u} &= \begin{pmatrix} PWM_1 \\ PWM_2 \\ PWM_3 \\ PWM_4 \end{pmatrix}
+\end{align*}
+
+Absolute speed in body frame transformed to inertial frame yields derivative of geodatic coordinates
+\begin{align*}
+	\dot{\vec{x}} &= \underline{T}_b^i \cdot \vec{v}
+\intertext{Principle of linear momentum of point mass - body fixed frame}
+	\frac{\text{d}\vec{p}}{\text{d}t} &= \sum \vec{F} 
+	\\
+	m \cdot \frac{\text{d}\vec{v}}{\text{d}t} &=\sum \vec{F}
+	\\
+	m \cdot \left(\frac{\text{d}\vec{v}}{\text{d}t}\right)_{\omega=0} +  \vec{\omega} \times m \cdot\vec{v} &=\sum \vec{F}
+	\\ \Rightarrow \dot{\vec{v}} &= \frac{1}{m} \cdot \sum \vec{F} - \vec{\omega} \times \vec{v}	
+\intertext{with (see Eq.~\ref{eq:Tib} for $\underline{T}_i^b$)}
+	\sum \vec{F} &= \underline{T}_i^b \cdot \begin{pmatrix} 0 \\ 0 \\ -m\cdot g	\end{pmatrix} + \begin{pmatrix} 0 \\ 0 \\ F_1 + F_2 + F_3 + F_4	\end{pmatrix}
+\intertext{Angular velocities in body frame can be transformed to the derivatives of the euler angles via the Kalman transformation matrix (see Eq.~\ref{eq:Vbi} for $\underline{V}_b^i$)}
+	\dot{\vec{\Phi}} &= \underline{V}_b^i \cdot \vec{\omega}
+\intertext{Principle of momentum - body fixed frame}
+	\frac{\text{d}L}{\text{d}t} &= \sum \vec{M}
+	\\
+	\left(\frac{\text{d}L}{\text{d}t}\right)_{\omega=0} + \vec{\omega} \times L &= \sum \vec{M}
+	\\
+	\inertia \cdot \left(\frac{\text{d}\vec{\omega}}{\text{d}t}\right)_{\omega=0} + \vec{\omega} \times \left( \inertia \cdot \vec{\omega} \right) &= \sum \vec{M} 
+	\\
+	\Rightarrow \dot{\vec{\omega}} &= \inertia^{-1} \cdot \left( \sum \vec{M} - \vec{\omega} \times \left( \inertia \cdot \vec{\omega} \right) \right)
+\intertext{with}
+	\sum \vec{M} &= \begin{pmatrix} l\cdot(F_2 - F_4) \\ l\cdot(F_3 - F_1) \\ M_1 - M_2 + M_3 - M_4 \end{pmatrix}
+\intertext{The general state space  $\dot{x} = f(\vec{x}, \vec{u})$ therefore looks as follows}
+		 \begin{pmatrix} \dot{\vec{x}} \\ \dot{\vec{v}} \\ \dot{\vec{\Phi}} \\ \dot{\vec{\omega}} \end{pmatrix}&= \begin{pmatrix}
+	\underline{T}_b^i \cdot v 
+	\\[0.8em]
+	\underline{T}_i^b \cdot \begin{pmatrix}0\\0\\-g	\end{pmatrix} + \begin{pmatrix}0\\0\\ \frac{1}{m}\sum_{i=1}^4 F_i(\ctrl{i})	\end{pmatrix} - \vec{\omega} \times v 
+	\\[2em]
+	\underline{V}_b^i \cdot \omega
+	\\[0.8em]
+	\inertia^{-1} \cdot \left( \begin{pmatrix} l \cdot \left(F_2(\ctrl{2}) - F_4(\ctrl{4} \right)  \\ l \cdot \left(F_3(\ctrl{3}) - F_1(\ctrl{1} \right)  \\ \sum_{i=1}^4 (-1)^{i+1} \cdot M(\ctrl{i}) \end{pmatrix} - \vec{\omega} \times \left( \inertia \cdot \vec{\omega} \right) \right)
+	\end{pmatrix}
+\end{align*}
+
+For a quadrotor frame symmetric to the x- and y-axis, the inertia elements $\inertiaii{12}=\inertiaii{21}$ and $\inertiaii{23}=\inertiaii{32}$ equal 0. With
+\begin{align}
+	\vec{\omega} \times \left(\inertia \cdot \vec{\omega} \right) &= \begin{pmatrix}
+		\left(\Theta_{b31} \cdot \omega_1 + \Theta_{b32} \cdot \omega_2 + \Theta_{b33} \cdot \omega_3 \right) \cdot \omega_2 - \left(\Theta_{b21} \cdot \omega_1 + \Theta_{b22} \cdot \omega_2 + \Theta_{b23} \cdot \omega_3 \right) \cdot \omega_3  
+	\\[0.5em]
+		\left(\Theta_{b11} \cdot \omega_1 + \Theta_{b12} \cdot \omega_2 + \Theta_{b13} \cdot \omega_3 \right) \cdot \omega_3 - \left(\Theta_{b31} \cdot \omega_1 + \Theta_{b32} \cdot \omega_2 + \Theta_{b33} \cdot \omega_3 \right) \cdot \omega_1 
+	\\[0.5em]
+		\left(\Theta_{b21} \cdot \omega_1 + \Theta_{b22} \cdot \omega_2 + \Theta_{b23} \cdot \omega_3 \right) \cdot \omega_1 - \left(\Theta_{b11} \cdot \omega_1 + \Theta_{b12} \cdot \omega_2 + \Theta_{b13} \cdot \omega_3 \right) \cdot \omega_2
+	\end{pmatrix} \nonumber
+	\\
+	&= \begin{pmatrix}  
+		\left(\inertiaii{31} \cdot \omega_1 + \inertiaii{33} \cdot \omega_3 \right) \cdot \omega_2 - \inertiaii{22} \cdot \omega_2 \cdot \omega_3  
+	\\[0.5em]
+		\left(\inertiaii{11} \cdot \omega_1 + \inertiaii{13} \cdot \omega_3 \right) \cdot \omega_3 - \left(\inertiaii{31} \cdot \omega_1 + \inertiaii{33} \cdot \omega_3 \right) \cdot \omega_1 
+	\\[0.5em]
+		\inertiaii{22} \cdot \omega_2 \cdot \omega_1 - \left(\inertiaii{11} \cdot \omega_1 + \inertiaii{13} \cdot \omega_3 \right) \cdot \omega_2
+	\end{pmatrix} \nonumber
+\intertext{and the resulting simplifications of the inverse of the inertia matrix (see section~\ref{subsec:InertiaMatrix}) the state space can be stated as follows}
+	\Rightarrow \begin{pmatrix}  \dot{x} \\ \dot{y} \\ \dot{z} \\ \dot{u} \\ \dot{v} \\ \dot{w} \\ \dot{\Phi} \\ \dot{\Theta} \\ \dot{\Psi} \\ \dot{p} \\ \dot{q} \\ \dot{r} \end{pmatrix} &= \begin{pmatrix}
+		\Tbirc \cdot u + (\Tbircc) \cdot v + \left(\Tbirccc \right) \cdot w \\[0.5em]
+		\Tbirrc \cdot u + (\Tbirrcc) \cdot v + \left( \Tbirrccc \right) \cdot w \\[0.5em]
+		\Tbirrrc \cdot u + \left(\Tbirrrcc \right) \cdot v + \left( \Tbirrrccc \right) \cdot w \\[0.5em]
+		-g \cdot \Tibrccc - \omega_2 \cdot w + \omega_3 \cdot v	\\[0.5em]
+		-g \cdot \Tibrrccc - \omega_3 \cdot u + \omega_1 \cdot w \\[0.5em]
+		-g \cdot \Tibrrrccc - \omega_1 \cdot v + \omega_2 \cdot u + \frac{1}{m} \cdot \left( F_1(\ctrl{1}) + F_2(\ctrl{2}) + F_3(\ctrl{3}) + F_4(\ctrl{4}) \right)
+		\\[0.5em]
+		p + q \cdot \Vbircc + r \cdot \Vbirccc \\[0.5em]
+		q \cdot \Vbirrcc + r \cdot \Vbirrccc \\[0.5em]
+		q \cdot \Vbirrrcc + r \cdot \Vbirrrccc 
+		\\[0.5em]
+		\begin{pmatrix}
+		\dfrac{\inertiaii{33}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} & 0 & -\dfrac{\inertiaii{13}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \\
+		0  & \dfrac{1}{\inertiaii{22}} & 0 \\
+		-\dfrac{\inertiaii{13}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} & 0 & \dfrac{\inertiaii{11}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2}
+		\end{pmatrix}
+		\cdot 
+		\begin{pmatrix} l\cdot(F_2 - F_4) - \left(\Theta_{b31} \cdot \omega_1 + \Theta_{b33} \cdot \omega_3 \right) \cdot \omega_2 + \Theta_{b22} \cdot \omega_2 \cdot \omega_3  
+		\\[0.5em]
+		l\cdot(F_3 - F_1) - \left(\Theta_{b11} \cdot \omega_1 + \Theta_{b13} \cdot \omega_3 \right) \cdot \omega_3 + \left(\Theta_{b31} \cdot \omega_1 + \Theta_{b33} \cdot \omega_3 \right) \cdot \omega_1 
+		\\[0.5em]
+		M_1 - M_2 + M_3 - M_4 - \Theta_{b22} \cdot \omega_2 \cdot \omega_1 + \left(\Theta_{b11} \cdot \omega_1 +  \Theta_{b13} \cdot \omega_3 \right) \cdot \omega_2
+		\end{pmatrix}
+	\end{pmatrix}
+\end{align}
+\clearpage
+
+The esc's and bldc is identified using following input sequence and resulting force.
+
+\begin{figure}[htb!]
+	\centering
+	\includegraphics[width=0.7\textwidth]{01_figures/mdl_bldcIdent}
+	\caption{ESC + BLDC Unit - Measured input output behaviour}
+	\label{fig:mdl_bldcIdent}
+\end{figure}
+
+\begin{figure}[htb!]
+	\centering
+	\includegraphics[width=0.6\textwidth]{01_figures/mdl_hammerstein}
+	\caption{Hammerstein model structure}
+	\label{fig:mdl_hammerstein}
+\end{figure}
+
+Assuming a Hammerstein model structure (see Fig.~\ref{fig:mdl_hammerstein}) the input force to the quadrotor model is based on the following model structure:
+\begin{align*}
+	\dot{F} &= A_{hammerstein} \cdot F + B_{hammerstein} \cdot \tilde{u} \\[0.5em]
+	\tilde{u} &= f(\text{PWM}) 
+	\\[1em]
+	\Rightarrow F &= \dfrac{b_0}{a_0 - a_1 \cdot z^{-1}} \cdot \tilde{u} \\[0.5em]
+	\tilde{u} &= p_3 \cdot \ctrl{\text{PWM}}^3 + p_2 \cdot \ctrl{\text{PWM}}^2 + p_1 \cdot \ctrl{\text{PWM}} + p_0
+\intertext{For the purpose of control design, the dynamics are assumed sufficiently fast and only the nonlinearity is considered. The static gain of the transfer function for a step response is}
+	K &= \dfrac{b_0}{a_0 - a_1}
+\end{align*}
+\clearpage
+
+\subsection{Model Analysis}
+Analyze linearized model around setpoint $\vec{x}_0 = \begin{pmatrix} x_0 & y_0 & z_0 & \vec{0} \end{pmatrix}^T $ and $\vec{F}_0 = \begin{pmatrix} \frac{m\cdot g}{4} & \frac{m\cdot g}{4} & \frac{m\cdot g}{4} & \frac{m\cdot g}{4} \end{pmatrix}^T$
+\begin{align*}
+\dot{x}_0 &= \vec{0}
+	\\
+	A &= \begin{pmatrix}
+		0 & 0 & 0 	& 1 & 0 & 0 	& 0 & 0 & 0 	& 0 & 0 & 0
+	\\
+		0 & 0 & 0 	& 0 & 1 & 0 	& 0 & 0 & 0 	& 0 & 0 & 0
+	\\
+		0 & 0 & 0 	& 0 & 0 & 1 	& 0 & 0 & 0 	& 0 & 0 & 0
+	\\
+		0 & 0 & 0 	& 0 & 0 & 0 	& 0 & g & 0 	& 0 & 0 & 0
+	\\
+		0 & 0 & 0 	& 0 & 0 & 0 	& -g & 0 & 0 	& 0 & 0 & 0
+	\\
+		0 & 0 & 0 	& 0 & 0 & 0 	& 0 & 0 & 0 	& 0 & 0 & 0
+	\\
+		0 & 0 & 0 	& 0 & 0 & 0 	& 0 & 0 & 0 	& 1 & 0 & 0
+	\\
+		0 & 0 & 0 	& 0 & 0 & 0 	& 0 & 0 & 0 	& 0 & 1 & 0
+	\\
+		0 & 0 & 0 	& 0 & 0 & 0 	& 0 & 0 & 0 	& 0 & 0 & 1
+	\\
+		0 & 0 & 0 	& 0 & 0 & 0 	& 0 & 0 & 0 	& 0 & 0 & 0
+	\\
+		0 & 0 & 0 	& 0 & 0 & 0 	& 0 & 0 & 0 	& 0 & 0 & 0
+	\\
+		0 & 0 & 0 	& 0 & 0 & 0 	& 0 & 0 & 0 	& 0 & 0 & 0
+	\end{pmatrix}
+	\\
+	\vec{B} &= \begin{pmatrix} 
+	0 & 0 & 0 & 0 \\
+	0 & 0 & 0 & 0 \\
+	0 & 0 & 0 & 0 \\
+	0 & 0 & 0 & 0 \\
+	0 & 0 & 0 & 0 \\
+	\frac{1}{m} & \frac{1}{m} & \frac{1}{m} & \frac{1}{m} \\
+	0 & 0 & 0 & 0 \\
+	0 & 0 & 0 & 0 \\
+	-\dfrac{\inertiaii{13}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \cdot \dfrac{\text{d}M_1}{\text{d}F_1} & \dfrac{\inertiaii{33}\cdot l + \inertiaii{13} \cdot \frac{\text{d}M_2}{\text{d}F_2} }{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2}  & -\dfrac{\inertiaii{13}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \cdot \dfrac{\text{d}M_3}{\text{d}F_3} & \dfrac{-\inertiaii{33}\cdot l + \inertiaii{13} \cdot \frac{\text{d}M_4}{\text{d}F_4} }{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} 
+	\\
+	-\dfrac{l}{\Theta_{22}} & 0 & \dfrac{l}{\Theta_{22}} & 0
+	\\
+	\dfrac{\inertiaii{11}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \cdot \dfrac{\text{d}M_1}{\text{d}F_1} & \dfrac{-\inertiaii{13}\cdot l - \inertiaii{11} \cdot \frac{\text{d}M_2}{\text{d}F_2} }{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} & \dfrac{\inertiaii{11}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \cdot \dfrac{\text{d}M_3}{\text{d}F_3} & \dfrac{\inertiaii{13}\cdot l - \inertiaii{11} \cdot \frac{\text{d}M_4}{\text{d}F_4} }{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2}
+	\end{pmatrix}
+\end{align*}
+Tilt, orientation and height dynamics ($\Phi,~\Theta,~\Psi,~z$) are decoupled from remaining system. Only x and y direction are coupled to pitch and roll angles.
+\clearpage
+
+\subsection{Controlled Outputs}
+The control goal is to keep a stable tilt and fixed height ($\Phi,~\Theta,~z$). As these states are decoupled from the rest, the reduced model 
+\begin{align}
+	\dot{x}_{red} &= \begin{pmatrix} 0 & 0 & 0 & 1 & 0 & 0 \\
+									 0 & 0 & 0 & 0 & 1 & 0 \\
+									 0 & 0 & 0 & 0 & 0 & 1 \\
+									 0 & 0 & 0 & 0 & 0 & 0 \\
+									 0 & 0 & 0 & 0 & 0 & 0 \\
+									 0 & 0 & 0 & 0 & 0 & 0 
+					 \end{pmatrix} \cdot \vec{x}_{red} + 
+					 \begin{pmatrix}
+					 	0 & 0 & 0 & 0 \\
+					 	0 & 0 & 0 & 0 \\
+					 	0 & 0 & 0 & 0 \\
+					 	\frac{1}{m} & \frac{1}{m} & \frac{1}{m} & \frac{1}{m} \\
+					 	-\dfrac{\inertiaii{13}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \cdot \dfrac{\text{d}M_1}{\text{d}F_1} & \dfrac{\inertiaii{33}\cdot l + \inertiaii{13} \cdot \frac{\text{d}M_2}{\text{d}F_2} }{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2}  & -\dfrac{\inertiaii{13}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \cdot \dfrac{\text{d}M_3}{\text{d}F_3} & \dfrac{-\inertiaii{33}\cdot l + \inertiaii{13} \cdot \frac{\text{d}M_4}{\text{d}F_4} }{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} 
+					 	\\
+					 	-\dfrac{l}{\Theta_{22}} & 0 & \dfrac{l}{\Theta_{22}} & 0
+					 \end{pmatrix} \cdot \vec{F} \label{eq:mdl_linearized}
+\end{align}
+with $\vec{x}_{red} = \begin{pmatrix} z, \Phi, \Theta, \dot{z}, p, q \end{pmatrix}^T$ can be treated.
+\clearpage
+
+\subsection{Measured and Manipulated Variables}
+Add overview of sensor and actuator placement. 
+\begin{table}[htb!]
+	\centering
+	\begin{tabular}{c@{\quad}|c@{\quad}}
+		\hline
+		\rule{0pt}{12pt} 
+		System Inputs & System Outputs
+		\\[2pt]
+		\hline\rule{0pt}{12pt} 
+		$\text{PWM}_\text{esc,1}$ & $\der{u}$ \\
+		$\text{PWM}_\text{esc,2}$ & $\der{v}$ \\
+		$\text{PWM}_\text{esc,3}$ & $\der{w}$ \\
+		$\text{PWM}_\text{esc,4}$ & $p$ \\
+		& $q$ \\
+		& $r$ \\
+		\hline
+	\end{tabular}
+	\vspace{6mm}
+	\caption{Inputs and outputs} 
+	\label{tab:mdl_gcai_paramSim}
+\end{table}
+\clearpage
+
+\subsection{Control Configuration}
+\begin{figure}[htb!]
+	\centering
+	\includegraphics[width=0.7\textwidth]{01_figures/controlStructure}
+	\caption{Control structure}
+	\label{fig:controlStructure}
+\end{figure}
+\clearpage
+\clearpage
+
+\subsection{Controller Type}
+LQR + Kalman Filter.
+\clearpage
+
+\subsection{Performance Specification}
+Tilt of quadrotor remains unchanged. 
+\clearpage
+
+\subsection{Controller - PD}
+By reformulating Eq.~\ref{eq:mdl_linearized} as
+\begin{align*}
+\dot{x}_{red} &= \begin{pmatrix} 0 & 0 & 0 & 1 & 0 & 0 \\
+	0 & 0 & 0 & 0 & 1 & 0 \\
+	0 & 0 & 0 & 0 & 0 & 1 \\
+	0 & 0 & 0 & 0 & 0 & 0 \\
+	0 & 0 & 0 & 0 & 0 & 0 \\
+	0 & 0 & 0 & 0 & 0 & 0 
+\end{pmatrix} \cdot \vec{x}_{red} +
+\begin{pmatrix}
+	0   \\
+	0   \\
+	0   \\
+	u_1 \\
+	u_2 \\
+	u_3 
+\end{pmatrix}
+\\[1em]
+\begin{pmatrix} u_1 \\ u_2 \\ u_3 \end{pmatrix} &= 
+\begin{pmatrix}
+	\frac{1}{m} & \frac{1}{m} & \frac{1}{m} & \frac{1}{m} \\
+	-\dfrac{\inertiaii{13}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \cdot \dfrac{\text{d}M_1}{\text{d}F_1} & \dfrac{\inertiaii{33}\cdot l + \inertiaii{13} \cdot \frac{\text{d}M_2}{\text{d}F_2} }{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2}  & -\dfrac{\inertiaii{13}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \cdot \dfrac{\text{d}M_3}{\text{d}F_3} & \dfrac{-\inertiaii{33}\cdot l + \inertiaii{13} \cdot \frac{\text{d}M_4}{\text{d}F_4} }{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} 
+	\\
+	-\dfrac{l}{\Theta_{22}} & 0 & \dfrac{l}{\Theta_{22}} & 0
+\end{pmatrix} \cdot \vec{F}
+\\[0.5em]
+&= E \cdot \vec{F}
+\end{align*}
+the controller can be designed by interpreting three independant SISO systems: 
+\begin{align*}
+	\ddot{x}_{i,red}  &= u_i \qquad i=1\text{-}3
+\intertext{Choosing a PD controller}
+	\ddot{x}_{i,red} + k_d \cdot \dot{x}_{i,red} + k_p \cdot x_{i,red}  &= 0
+\intertext{the system's poles can directly prescribed by}
+	s_{1/2} &= -\dfrac{k_d}{2} \pm \sqrt{ \left( \dfrac{k_d}{2} \right)^2 - k_p }
+\end{align*}
+In order to invert $E\cdot \vec{F}$, a further condition can be added by $\sum M_i = 0$ leading to $\begin{pmatrix} 1 & -1 & 1 &-1 \end{pmatrix}$.
+\clearpage
+
+\subsection{Controller - LQR}
+
+\clearpage
+
+\subsection{Controller - Kalman filter}
+. 
+Show observer simulation results and results based on measurement data (in comparison to madgwick).
+\clearpage
+
+\subsection{Closed loop simulation}
+ Show closed loop control results. State feedback gains, Q, R. 

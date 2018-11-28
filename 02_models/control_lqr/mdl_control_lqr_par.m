@@ -1,5 +1,5 @@
-function Par_controlLqr = mdl_control_lqr_par( SystemDynamics )
-% function Par_controlLqr = mdl_control_lqr_par( systemDynamics )
+function Par = mdl_control_lqr_par( SystemDynamics )
+% function Par = mdl_control_lqr_par( systemDynamics )
 %
 %   Date        : Winter 2018
 %
@@ -8,7 +8,7 @@ function Par_controlLqr = mdl_control_lqr_par( SystemDynamics )
 %   Parameters  : SystemDynamics -> Struct containing linear state space
 %                                   matrices
 % 
-%   Return      : Par_controLqr -> Struct containing the feedback gains
+%   Return      : Par -> Struct containing the feedback gains
 %
 %-------------------------------------------------------------------------%
 
@@ -27,6 +27,6 @@ R = 0.5*eye(4);
 
 [k, S, e] = lqr(A, B, Q, R);
 % disp(e);
-Par_controlLqr.k = k;
-Par_controlLqr.ew = e;
-Par_controlLqr.S = S;
+Par.k = k;
+Par.ew = e;
+Par.S = S;

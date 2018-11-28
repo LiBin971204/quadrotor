@@ -1,0 +1,69 @@
+\section{Euler Angles}
+
+Rotation around x-axis with $\Phi$
+\begin{align*}
+	T(\Phi) &= \begin{pmatrix}
+		1 & 0 & 0 \\
+		0 & \cos{\Phi} & \sin{\Phi} \\
+		0 & -\sin{\Phi} & \cos{\Phi} 
+	\end{pmatrix}
+\end{align*}
+
+Rotation around y-axis with $\Theta$
+\begin{align*}
+T(\Theta) &= \begin{pmatrix}
+\cos{\Theta} & 0 &  -\sin{\Theta}\\
+0 & 1 &  \\
+\sin{\Theta} & 0 & \cos{\Theta} 
+\end{pmatrix}
+\end{align*}
+
+Rotation around z-axis with $\Psi$
+\begin{align*}
+T(\Psi) &= \begin{pmatrix}
+ \cos{\Psi} & \sin{\Psi} & 0 \\
+-\sin{\Psi} & \cos{\Psi} & 0 \\
+         0  &         0  & 1 
+\end{pmatrix}
+\end{align*}
+
+\subsection{xyz-Convention}
+Orthogonal transformation matrix from inertial to body frame
+\begin{align}
+	\underline{T}_i^b &= \begin{pmatrix}
+		\ctheta \cdot \cpsi & \ctheta \cdot \spsi & - \stheta  
+		\\
+		\sphi\cdot \stheta \cdot \cpsi - \cphi \cdot \spsi & \sphi \cdot \stheta \cdot \spsi + \cphi \cdot \cpsi & \sphi \cdot \ctheta 
+		\\
+		\cphi \cdot \stheta \cdot \cpsi +\sphi \cdot \spsi & \cphi \cdot \stheta \cdot \spsi - \sphi \cdot \cpsi & \cphi \cdot \ctheta
+	\end{pmatrix} \label{eq:Tib}
+\intertext{Orthogonal transformation matrix from body to inertial frame}
+	\underline{T}_b^i &= \begin{pmatrix}
+		\ctheta \cdot \cpsi & \sphi\cdot \stheta \cdot \cpsi - \cphi \cdot \spsi & \cphi \cdot \stheta \cdot \cpsi +\sphi \cdot \spsi
+		\\
+		\ctheta \cdot \spsi & \sphi \cdot \stheta \cdot \spsi + \cphi \cdot \cpsi & \cphi \cdot \stheta \cdot \spsi - \sphi \cdot \cpsi
+		\\
+		- \stheta  & \sphi \cdot \ctheta  & \cphi \cdot \ctheta
+	\end{pmatrix} \label{eq:Tbi}
+\end{align}
+
+Karman rotation matrix. 
+\begin{align}
+	\omega &= \underline{T}_2^b \cdot \begin{pmatrix} \dot{\Phi}  \\ 0 \\ 0 \end{pmatrix} + \underline{T}_1^b \cdot \begin{pmatrix} 0  \\ \dot{\Theta} \\ 0 \end{pmatrix} + \underline{T}_i^b \cdot \begin{pmatrix} 0  \\ 0 \\ \dot{\Psi} \end{pmatrix} 
+	\\[1em]
+	\omega &= \underline{V}_i^b \cdot \dot{\vec{\Phi}} \\[1em]
+	\underline{V}_b^i &= \left(\underline{V}_i^b \right)^{-1}
+	\\[2em]
+	\underline{V}_i^b &= \begin{pmatrix}
+		1 & 0 & -\stheta 	\\
+		0 & \cphi & \sphi \cdot \ctheta 	\\
+		0 & -\sphi & \cphi \cdot \ctheta
+	\end{pmatrix} \label{eq:Vib}
+	\\[2em]
+	\underline{V}_b^i &= \begin{pmatrix}
+		1 & \sphi \cdot t\Theta & \cphi \cdot t\Theta 	\\
+		0 & \cphi & -\sphi 	\\
+		0 & \frac{\sphi}{\ctheta} & \frac{\cphi}{\ctheta}
+	\end{pmatrix} \label{eq:Vbi}
+\end{align}
+\clearpage

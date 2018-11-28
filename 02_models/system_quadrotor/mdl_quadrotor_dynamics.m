@@ -22,6 +22,7 @@ if nargin==0
     Ode.Size.n_states   = 12;
     Ode.Size.n_inputs   = 4;
     Ode.Size.n_outputs  = 6;
+    Ode.Size.n_onlineParameter = 0;
     Ode.Info.inputs     = {'thrust_motor1'; 'thrust_motor2'; ...
                            'thrust_motor3'; 'thrust_motor4'};
     Ode.Info.states     = {'x_geodetic'; 'y_geodetic'; 'z_geodetic'; ...

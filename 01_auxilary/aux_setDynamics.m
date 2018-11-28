@@ -14,15 +14,8 @@ function Dyn = aux_setDynamics( dynamics )
 %   Return      : Dyn -> Struct containing the system dynamics
 % 
 %-------------------------------------------------------------------------%
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                             Import toolboxes                            %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import casadi.*
 
-%-------------------------------------------------------------------------%
 
 
 
@@ -44,59 +37,105 @@ end
 
 
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                          Define dynamic system                          %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TODO: Add option to switch between casadi and matlab syms symbolic variables for states, algebraic variables and controls
-% TODO: Online parameter necessary here? Rather mpc specific
+% Define symbolic variables in SI units
+x   = MX.sym('x', Dyn.Size.n_states); 
+u   = MX.sym('u', Dyn.Size.n_inputs);
 
-% Continuous: x_dot = f(x, p, u), y = g(x, p, u) and h(x, p, u) = 0
-% Discrete: xk1 = f(xk, pk, uk), yk = g(xk, pk, uk) and h(xk, pk, uk) = 0
+
+if Dyn.Size.n_onlineParameter > 0
+    par = MX.sym('onlineParameter', Dyn.Size.n_onlineParameter);
+    for ii = 1:Dyn.Size.n_onlineParameter
+        fieldName = strsplit(Dyn.Info.onlineParameter{ii});
+        parMdl.(fieldName{1}) = par(ii);
+    end
+end
+
+
 switch Dyn.type
     case 'dae'
-        % Define symbolic variables in SI units
-        x   = MX.sym('x', Dyn.Size.n_states); 
-        p   = MX.sym('p', Dyn.Size.n_algebraicVars);
-        u   = MX.sym('u', Dyn.Size.n_inputs); 
+        % Continuous: xdot = f(x, p, u), y = g(x, p, u) and h(x, p, u) = 0
+        % Discrete: xk1 = f(xk, pk, uk), yk = g(xk, pk, uk) and h(xk, pk, uk) = 0
         
+        % Define algebraic variables in SI units
+        p   = MX.sym('p', Dyn.Size.n_algebraicVars);
+        
+        % Get system dynamics
         eval(['[f, g, h] = ' dynamics '_dynamics(x, p, u, parMdl);']);
         
         % Define functions and store in struct
-        Dyn.systemDynamics ...
-            = Function([Dyn.name '_systemDynamics'], ...
-              { x      ,  u      ,  p       } , { f }, ...
-              {'states', 'inputs', 'algVars'} , {'systemDynamics'});
+        if Dyn.Size.n_onlineParameter > 0
+            Dyn.systemDynamics ...
+                = Function([Dyn.name '_systemDynamics'], ...
+                  {    x   ,     p    ,     u   ,      par    }, {      f         }, ...
+                  {'states', 'algVars', 'inputs', 'parameters'}, {'systemDynamics'});
 
-        Dyn.systemOutput ...
-            = Function([Dyn.name '_systemOutput'], ...
-              { x      ,  u      ,  p       } , { g }, ...
-              {'states', 'inputs', 'algVars'} , {'systemOutput'});
+            Dyn.systemOutput ...
+                = Function([Dyn.name '_systemOutput'], ...
+                  {    x   ,     p    ,     u   ,      par    }, {     g        }, ...
+                  {'states', 'algVars', 'inputs', 'parameters'}, {'systemOutput'});
 
-        Dyn.algebraicEquation ...
-            = Function([Dyn.name '_algebraicEquation'], ...
-              { x      ,  u      ,  p       } , { h }, ...
-              {'states', 'inputs', 'algVars'} , {'algebraicEquation'});
-          
-    case 'ode'
-        % Define symbolic variables in SI units
-        x   = MX.sym('x', Dyn.Size.n_states); 
-        u   = MX.sym('u', Dyn.Size.n_inputs); 
+            Dyn.algebraicEquation ...
+                = Function([Dyn.name '_algebraicEquation'], ...
+                {    x   ,     p    ,     u   ,      par    }, {        h          }, ...
+                {'states', 'algVars', 'inputs', 'parameters'}, {'algebraicEquation'});
+
+        else
+            Dyn.systemDynamics ...
+                = Function([Dyn.name '_systemDynamics'], ...
+                  {    x   ,     p    ,     u   }, {      f         }, ...
+                  {'states', 'algVars', 'inputs'}, {'systemDynamics'});
+
+            Dyn.systemOutput ...
+                = Function([Dyn.name '_systemOutput'], ...
+                  {    x   ,     p    ,     u   }, {      g       }, ...
+                  {'states', 'algVars', 'inputs'}, {'systemOutput'});
+
+            Dyn.algebraicEquation ...
+                = Function([Dyn.name '_algebraicEquation'], ...
+                  {    x   ,    p    ,    u   }, {        h          }, ...
+                  {'states','algVars','inputs'}, {'algebraicEquation'});
+
+        end
+       
         
+    case 'ode'
+        % Continuous: xdot = f(x, u), y = g(x, u) and h(x, u) = 0
+        % Discrete: xk1 = f(xk, uk), yk = g(xk, uk) and h(xk, uk) = 0
+        
+        % Get system dynamics
         eval(['[f, g] = ' dynamics '_dynamics(x, u, parMdl);']);
         
         % Define functions and store in struct
-        Dyn.systemDynamics ...
-            = Function([Dyn.name '_systemDynamics'], ...
-              { x      ,  u      } , { f }, ...
-              {'states', 'inputs'} , {'systemDynamics'});
+        if Dyn.Size.n_onlineParameter > 0
+            Dyn.systemDynamics ...
+                = Function([Dyn.name '_systemDynamics'], ...
+                  {    x   ,     u   ,      par    }, {      f         }, ...
+                  {'states', 'inputs', 'parameters'}, {'systemDynamics'});
 
-        Dyn.systemOutput ...
-            = Function([Dyn.name '_systemOutput'], ...
-              { x      ,   u     } , { g }, ...
-              {'states', 'inputs'} , {'systemOutput'});
-          
+            Dyn.systemOutput ...
+                = Function([Dyn.name '_systemOutput'], ...
+                  {    x   ,     u   ,      par    }, {      g       }, ...
+                  {'states', 'inputs', 'parameters'}, {'systemOutput'});
+
+        else
+            Dyn.systemDynamics ...
+                = Function([Dyn.name '_systemDynamics'], ...
+                  {    x   ,     u   }, {       f        }, ...
+                  {'states', 'inputs'}, {'systemDynamics'});
+
+            Dyn.systemOutput ...
+                = Function([Dyn.name '_systemOutput'], ...
+                  {    x   ,    u   }, {       g      }, ...
+                  {'states','inputs'}, {'systemOutput'});
+
+        end
+
 end
 
-sprintf('Nonlinear dynamics set\n');
+disp('System dynamics set');
 
 %-------------------------------------------------------------------------%

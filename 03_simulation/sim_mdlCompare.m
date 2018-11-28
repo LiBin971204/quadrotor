@@ -1,4 +1,5 @@
 clear; close all; clc;
+% TODO: Compare results with adapted model in simulink
 
 % Get model parameters
 Par_mdlQuad = mdl_quadrotor_par();

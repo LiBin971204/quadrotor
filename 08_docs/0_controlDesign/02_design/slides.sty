@@ -1,0 +1,50 @@
+\usepackage[landscape, left=0.5cm, right=0.5cm, top=3cm, headheight=2.5cm, headsep=0.5cm, textheight=5cm, bottom=2.2cm]{geometry} % Set landscape and page margins
+
+\usepackage{nameref} 	% To call section name via \currentname
+\makeatletter
+\newcommand*{\currentname}{\@currentlabelname}
+\makeatother
+
+\usepackage{xcolor} 	% Define custom colors \definecolor{name}{RGB}{0,84,159}
+\usepackage{fancyhdr}	% Use custom header 
+
+\newcommand{\LOGO}{02_design/template_quadrotor}
+\newcommand{\slideTitleXX}{\currentname}
+
+
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0.5pt}
+\lhead{
+	\begin{minipage}{0.7\textwidth}
+		\vspace{1cm}
+		\LARGE \color{MidnightBlue} \textbf{\slideTitleXX}
+	\end{minipage}
+	\begin{minipage}{0.29\textwidth}
+		\begin{flushright}
+			\includegraphics[width=0.3\textwidth]{\LOGO}
+		\end{flushright}
+	\end{minipage}
+\\[-1.5em]
+}
+
+\lfoot{
+	\begin{minipage}{0.65\textwidth}
+		\vspace{0.4cm}
+		\quad \thepage
+	\end{minipage}
+%	\begin{minipage}{0.29\textwidth}
+%		\vspace{0.4cm}
+%		\begin{flushright}
+%			\includegraphics[trim={0 10pt 0 10pt},width=0.2\textwidth]{\LOGO}
+%		\end{flushright}
+%	\end{minipage}
+}
+
+\pagestyle{fancy} % Enable for slides
+
+% Remove section headings 
+\usepackage{titlesec}
+\titleformat*{\section}{\tiny \color{white}}
+\titleformat*{\subsection}{\tiny \color{white}}
+\titleformat*{\subsubsection}{\tiny \color{white}}

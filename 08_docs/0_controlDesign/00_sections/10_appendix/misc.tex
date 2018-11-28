@@ -1,0 +1,226 @@
+\section{Misc}
+
+\subsection{Model linearization}
+Linearization around $\vec{x}_0:~\dot{\vec{x}} = f(\vec{x}_0) + \frac{\text{d}f}{\text{d}\vec{x}} \cdot \vec{x} + \frac{\text{d}f}{\text{d}\vec{F}} \cdot \vec{F}$
+\begin{align*}
+\frac{\text{d}f}{\text{d} \left( \vec{x} ~~ \vec{v} \right)^T } &= 
+\begin{pmatrix}
+0 & 0 & 0 & \ctheta \cdot \cpsi  & \sphi \cdot \stheta \cdot \cpsi - \cphi \cdot \spsi  & \cphi \cdot \stheta \cdot \cpsi +  \sphi \cdot \spsi
+\\
+0 & 0 & 0 & \ctheta\cdot \spsi  & \sphi \cdot \stheta \cdot \spsi + \cphi \cdot \cpsi & \cphi \cdot \stheta \cdot \spsi - \sphi \cdot \cpsi
+\\
+0 & 0 & 0 & -\stheta  & \sphi \cdot \ctheta  & \cphi \cdot \ctheta 
+\\
+0 & 0 & 0 & 0 & r & -q
+\\
+0 & 0 & 0 & -r & 0 & p
+\\
+0 & 0 & 0 & q & -p & 0
+\\
+0 & 0 & 0 & 0 & 0 & 0
+\\
+0 & 0 & 0 & 0 & 0 & 0
+\\
+0 & 0 & 0 & 0 & 0 & 0
+\\
+0 & 0 & 0 & 0 & 0 & 0
+\\
+0 & 0 & 0 & 0 & 0 & 0
+\\
+0 & 0 & 0 & 0 & 0 & 0
+\end{pmatrix} 
+\\[2em]
+\frac{\text{d}f}{\text{d} \vec{\Phi}} &= \begin{pmatrix} 
+\left(s\Phi s\Psi + c\Phi s\Theta c\Psi \right)  v + \left(c\Phi s\Psi -s\Phi s\Theta c\Psi \right)  w & -s\Theta c\Psi u + s\Phi c\Theta c\Psi v + c\Phi c\Theta c\Psi w & - c\Theta s\Psi u + \left( - c\Phi c\Psi  -s\Phi s\Theta s\Psi \right) v + \left(s\Phi c\Psi - c\Phi s\Theta s\Psi \right) w 
+\\
+\left(-\sphi\cpsi + \cphi\stheta\spsi \right) v + \left( -\cphi\cpsi - \sphi\stheta\spsi \right) w & -\stheta \spsi u + \sphi\ctheta\spsi v + \cphi\ctheta\spsi w  & \ctheta\cpsi u + \left( - \cphi\spsi + \sphi\stheta\cpsi\right)v + \left(\cphi\stheta\cpsi + \sphi\spsi \right)w 
+\\
+\cphi\ctheta v - \sphi\ctheta w & -\ctheta u - \sphi\stheta v - \cphi\stheta w & 0  
+\\
+0 & g \cdot \ctheta & 0 
+\\
+-g \cdot \cphi \ctheta & g \cdot \sphi \cdot \ctheta & 0 
+\\
+g \cdot \sphi \ctheta & g \cdot \cphi \cdot \stheta & 0 
+\\
+-\cphi t\Theta q - \sphi t\Theta r & \frac{\sphi}{\ctheta^2} q + \frac{\cphi}{\ctheta^2} r & 0 
+\\
+-\sphi q- \cphi r& 0 & 0 
+\\
+\frac{\cphi}{\ctheta} q - \frac{\sphi}{\ctheta} r & \frac{\sphi}{\ctheta^2} \stheta q + \frac{\cphi}{\ctheta ^2 } \sphi r & 0 
+\\
+0 & 0 & 0 
+\\
+0 & 0 & 0  
+\\
+0 & 0 & 0  
+\end{pmatrix}
+\end{align*}
+\begin{align*}
+	\frac{\text{d}f}{\text{d} \vec{\omega}} &= \begin{pmatrix} 
+		0 & 0 & 0 
+	\\
+		0 & 0 & 0
+	\\
+		0 & 0 & 0
+	\\
+		0 & -w & v
+	\\
+		w & 0 & -u
+	\\
+		-v & u & 0
+	\\
+		1 & \sphi t\Theta  & \cphi t\Theta
+	\\
+		0 & \cphi & -\sphi
+	\\
+		0 & \frac{\sphi}{\ctheta} & \frac{\cphi}{\ctheta}
+	\\[0.8em]
+		&\inertia^{-1} \cdot \begin{pmatrix}
+			-\inertiaii{31} \cdot q + \inertiaii{21}\cdot r & 
+			-\inertiaii{32} \cdot q -\inertiaii{31} \cdot p + (\inertiaii{22} - \inertiaii{33})\cdot r  & 
+			\inertiaii{21}\cdot p + (\inertiaii{22}-\inertiaii{33})\cdot q + 2\cdot \inertiaii{23}\cdot r
+			\\
+			2\cdot \inertiaii{31}\cdot p + \inertiaii{32}\cdot q + (\inertiaii{33}-\inertiaii{11})\cdot r & 
+			-\inertiaii{12} \cdot r +\inertiaii{32} \cdot p & 
+			(\inertiaii{33}-\inertiaii{11})\cdot p - \inertiaii{12}\cdot q - 2\cdot\inertiaii{13}\cdot r 
+			\\
+			-2\cdot \inertiaii{21} \cdot p + (\inertiaii{11}- \inertiaii{22})\cdot q - \inertiaii{23}\cdot r &  
+			(\inertiaii{11}-\inertiaii{22})\cdot p + 2\cdot \inertiaii{12}\cdot q + \inertiaii{13}\cdot r &
+			-\inertiaii{23} \cdot p +\inertiaii{13} \cdot q
+		\end{pmatrix}
+	\end{pmatrix}	
+	\\[2em]
+	\frac{\text{d}f}{\text{d} \vec{F}} &= 
+	\begin{pmatrix} 
+		0 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 0 \\
+		\frac{1}{m} & \frac{1}{m} & \frac{1}{m} & \frac{1}{m} \\[0.2em]
+		0 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 0 \\
+		0 & 0 & 0 & 0 \\
+		 & \inertia^{-1} \cdot \begin{pmatrix}
+		 	0 & l & 0 & -l \\
+		 	-l & 0 &  l & 0 \\
+		 	\frac{\text{d}M_1}{\text{d}F_1} & -\frac{\text{d}M_2}{\text{d}F_2} & \frac{\text{d}M_3}{\text{d}F_3} & -\frac{\text{d}M_4}{\text{d}F_4}
+		 \end{pmatrix}
+	\end{pmatrix}
+\end{align*}
+
+
+\begin{align*}
+	\frac{\text{d}(-\vec{\omega} \times (\inertia\cdot\vec{\omega}))}{\text{d}\vec{\omega}} &= 
+	\begin{pmatrix}
+		-\inertiaii{31} \cdot q + \inertiaii{21}\cdot r & 
+		-\inertiaii{32} \cdot q -\inertiaii{31} \cdot p - \inertiaii{33}\cdot r + \inertiaii{22}\cdot r & 
+		-\inertiaii{33}\cdot q + \inertiaii{21}\cdot p + \inertiaii{22}\cdot q + 2\cdot \inertiaii{23}\cdot r
+		\\
+		-\inertiaii{11} \cdot r + 2\cdot \inertiaii{31}\cdot p + \inertiaii{32}\cdot q +\inertiaii{33}\cdot r& 
+		-\inertiaii{12} \cdot r +\inertiaii{32} \cdot p & 
+		-\inertiaii{11}\cdot p - \inertiaii{12}\cdot q - 2\cdot\inertiaii{13}\cdot r + \inertiaii{33}\cdot p
+		\\
+		-2\cdot \inertiaii{21} \cdot p - \inertiaii{22}\cdot q - \inertiaii{23}\cdot r +\inertiaii{11}\cdot q &  
+		-\inertiaii{22}\cdot p + 2\cdot \inertiaii{12}\cdot q + \inertiaii{11}\cdot p + \inertiaii{13}\cdot r &
+		-\inertiaii{23} \cdot p +\inertiaii{13} \cdot q
+	\end{pmatrix}
+	\\[1em]
+	&= \begin{pmatrix}
+		-\inertiaii{31} \cdot q + \inertiaii{21}\cdot r & 
+		-\inertiaii{32} \cdot q -\inertiaii{31} \cdot p + (\inertiaii{22} - \inertiaii{33})\cdot r  & 
+		\inertiaii{21}\cdot p + (\inertiaii{22}-\inertiaii{33})\cdot q + 2\cdot \inertiaii{23}\cdot r
+	\\
+		2\cdot \inertiaii{31}\cdot p + \inertiaii{32}\cdot q + (\inertiaii{33}-\inertiaii{11})\cdot r & 
+		-\inertiaii{12} \cdot r +\inertiaii{32} \cdot p & 
+		(\inertiaii{33}-\inertiaii{11})\cdot p - \inertiaii{12}\cdot q - 2\cdot\inertiaii{13}\cdot r 
+	\\
+		-2\cdot \inertiaii{21} \cdot p + (\inertiaii{11}- \inertiaii{22})\cdot q - \inertiaii{23}\cdot r &  
+		(\inertiaii{11}-\inertiaii{22})\cdot p + 2\cdot \inertiaii{12}\cdot q + \inertiaii{13}\cdot r &
+		-\inertiaii{23} \cdot p +\inertiaii{13} \cdot q
+	\end{pmatrix}
+	\\[1em]
+	&\overset{\inertiaii{12}=\inertiaii{23}=0}{=} 
+	\begin{pmatrix}
+		-\inertiaii{31} \cdot q  & 
+		-\inertiaii{31} \cdot p + (\inertiaii{22} - \inertiaii{33})\cdot r  & 
+	 	(\inertiaii{22}-\inertiaii{33})\cdot q 
+	\\
+		2\cdot \inertiaii{31}\cdot p + (\inertiaii{33}-\inertiaii{11})\cdot r & 
+		0 & 
+		(\inertiaii{33}-\inertiaii{11})\cdot p  - 2\cdot\inertiaii{13}\cdot r 
+	\\
+	 	(\inertiaii{11}- \inertiaii{22})\cdot q  &  
+		(\inertiaii{11}-\inertiaii{22})\cdot p + \inertiaii{13}\cdot r &
+		\inertiaii{13} \cdot q
+	\end{pmatrix}
+	\\[2em]
+	\inertia^{-1}\cdot \frac{\text{d}(-\vec{\omega} \times (\inertia\cdot\vec{\omega}))}{\text{d}\vec{\omega}} &\overset{\inertiaii{12}=\inertiaii{23}=0}{=} 
+	\\[1em]
+	&\hspace{-4.5cm}\begin{pmatrix}
+		\dfrac{-\Theta_{33}\cdot \Theta_{b31} \cdot q + \Theta_{13} \cdot (\Theta_{b22}-\Theta_{b11}) \cdot q}{\Theta_{11} \cdot \Theta_{33} - \Theta^{2}_{13}} & \dfrac{\Theta_{33} \cdot (-\Theta_{b31}\cdot p + (\Theta_{b22}-\Theta_{b33}) \cdot r)+\Theta_{13} \cdot ((\Theta_{b22}-\Theta_{b11}) \cdot p - \Theta_{b33}\cdot r) }{\Theta_{11} \cdot \Theta_{33} - \Theta^{2}_{13}}  & \dfrac{\Theta_{33} \cdot (\Theta_{b22}-\Theta_{b33}) \cdot q - \Theta_{b13}^2 \cdot q  }{\Theta_{11} \cdot \Theta_{33} - \Theta^{2}_{13}} 
+	\\[2em]
+		\frac{1}{\Theta_{22}} \cdot \left( - \Theta_{b11} \cdot r + 2\cdot\Theta_{b31} \cdot p \right)& 0 & \frac{1}{\Theta_{22}} \cdot \left(- 2 \cdot \Theta_{b13} \cdot r + \Theta_{b33} \cdot p \right)
+	\\[1em]
+		\dfrac{\Theta_{13}^2 \cdot q + \Theta_{11}\cdot (\Theta_{b11} - \Theta_{b22}) \cdot q}{\Theta_{11} \cdot \Theta_{33} - \Theta^{2}_{13}} & \dfrac{\Theta_{13} \cdot (\Theta_{b31}\cdot p + (\Theta_{b33}-\Theta_{b22}) \cdot r)+\Theta_{11} \cdot ((\Theta_{b11}-\Theta_{b22}) \cdot p + \Theta_{b33}\cdot r) }{\Theta_{11} \cdot \Theta_{33} - \Theta^{2}_{13}}   & \dfrac{\Theta_{13} \cdot (\Theta_{b33}-\Theta_{b22}) \cdot q + \Theta_{b11}\cdot\Theta_{b13}\cdot q  }{\Theta_{11} \cdot \Theta_{33} - \Theta^{2}_{13}} 
+	\end{pmatrix}
+	\\[1.5em]
+		\inertia^{-1} \cdot \vec{M} &\overset{\inertiaii{12}=\inertiaii{23}=0}{=} \begin{pmatrix}
+			-\dfrac{\inertiaii{13}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \cdot \dfrac{\text{d}M_1}{\text{d}F_1} & \dfrac{\inertiaii{33}\cdot l + \inertiaii{13} \cdot \frac{\text{d}M_2}{\text{d}F_2} }{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2}  & -\dfrac{\inertiaii{13}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \cdot \dfrac{\text{d}M_3}{\text{d}F_3} & \dfrac{-\inertiaii{33}\cdot l + \inertiaii{13} \cdot \frac{\text{d}M_4}{\text{d}F_4} }{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} 
+		\\
+			-\dfrac{l}{\Theta_{22}} & 0 & \dfrac{l}{\Theta_{22}} & 0
+		\\
+			\dfrac{\inertiaii{11}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \cdot \dfrac{\text{d}M_1}{\text{d}F_1} & \dfrac{-\inertiaii{13}\cdot l - \inertiaii{11} \cdot \frac{\text{d}M_2}{\text{d}F_2} }{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} & \dfrac{\inertiaii{11}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \cdot \dfrac{\text{d}M_3}{\text{d}F_3} & \dfrac{\inertiaii{13}\cdot l - \inertiaii{11} \cdot \frac{\text{d}M_4}{\text{d}F_4} }{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2}
+	\end{pmatrix}	
+\end{align*}
+\clearpage
+
+
+\subsection{Inertia matrix - Inverse} \label{subsec:InertiaMatrix}
+
+Inertia matrix
+\begin{align*}
+	\inertia &= \begin{pmatrix} \inertiaii{11} & \inertiaii{12} & \inertiaii{13} \\
+							\inertiaii{21} & \inertiaii{22} & \inertiaii{23} \\
+							\inertiaii{31} & \inertiaii{32} & \inertiaii{33} \end{pmatrix} 
+\intertext{Derivation inverse}
+	\det \inertia &= \inertiaii{11} \cdot \inertiaii{22} \cdot \inertiaii{33} + 2 \cdot \inertiaii{12} \cdot \inertiaii{23} \cdot \inertiaii{13} - \inertiaii{13}^{2} \cdot \inertiaii{22}-\inertiaii{23}^{2} \cdot \inertiaii{11} - \inertiaii{12}^{2} \cdot \inertiaii{33}
+\intertext{Adjunct matrix}
+	\inertia^{11} &= \inertiaii{22}\cdot \inertiaii{33}-\inertiaii{23}\cdot \inertiaii{32}=\inertiaii{22}\cdot \inertiaii{33}-\inertiaii{23}^{2}\\
+	\inertia^{12}&=\inertiaii{21}\cdot \inertiaii{33}-\inertiaii{23}\cdot \inertiaii{31}\\
+	\inertia^{13}&=\inertiaii{21}\cdot \inertiaii{32}-\inertiaii{22}\cdot \inertiaii{31}\\
+	\inertia^{22}&=\inertiaii{11}\cdot \inertiaii{33}-\inertiaii{13}^{2} \\
+	\inertia^{21}&=\inertiaii{12}\cdot \inertiaii{33}-\inertiaii{13}\cdot \inertiaii{23}\\
+	\inertia^{23}&=\inertiaii{11}\cdot \inertiaii{32}-\inertiaii{12}\cdot \inertiaii{31}\\
+	\inertia^{31}&=\inertiaii{12}\cdot \inertiaii{23}-\inertiaii{13}\cdot \inertiaii{22}\\
+	\inertia^{32}&=\inertiaii{11}\cdot \inertiaii{23}-\inertiaii{13}\cdot \inertiaii{21}\\
+	\inertia^{33}&=\inertiaii{11}\cdot \inertiaii{22}-\inertiaii{12}^{2} 
+\\\\
+	\Theta_{body, adj}^T &= \begin{pmatrix}
+	\inertia^{11} & -\inertia^{21} & \inertia^{31} \\
+	-\inertia^{12} & \inertia^{22} & -\inertia^{32} \\
+	\inertia^{13} & -\inertia^{23} & \inertia^{33}
+	\end{pmatrix}
+\intertext{Inverse matrix}
+	\inertia^{-1} &= \dfrac {1}{\det \inertia} \cdot \begin{pmatrix}
+	\inertiaii{22}\cdot \inertiaii{33}-\inertiaii{23}^{2} & \inertiaii{13} \cdot \inertiaii{23} - \inertiaii{12}\cdot \inertiaii{13} & \inertiaii{12}\cdot \inertiaii{23}-\inertiaii{13}\cdot \inertiaii{22} 
+	\\
+	\inertiaii{23}\cdot \inertiaii{31}-\inertiaii{21}\cdot \inertiaii{33} & \inertiaii{11}\cdot \inertiaii{33}-\inertiaii{13}^{2} & \inertiaii{13} \cdot \inertiaii{21}-\inertiaii{11}\cdot \inertiaii{23} 
+	\\
+	\inertiaii{21}\cdot \inertiaii{32}-\inertiaii{22}\cdot \inertiaii{31} & \inertiaii{12}\cdot \inertiaii{31}-\inertiaii{11}\cdot \inertiaii{32} & \inertiaii{11}\cdot \inertiaii{22}- \inertiaii{12}^{2}
+\end{pmatrix}
+\intertext{If quadrotor is symmetric about x and y axis, $\inertiaii{12} = \inertiaii{21} = \inertiaii{23} = \inertiaii{32} = 0$ holds}
+	\Rightarrow \inertia^{-1} &= \dfrac{1}{\inertiaii{11} \cdot \inertiaii{22} \cdot \inertiaii{33} - \inertiaii{22} \cdot \inertiaii{13}^2} \cdot \begin{pmatrix}
+	\inertiaii{22} \cdot \inertiaii{33} & 0 		& -\inertiaii{22}\cdot \inertiaii{13} \\
+	0  							   & \inertiaii{11} \cdot \inertiaii{33}-\inertiaii{13}^2 & 0 \\
+	-\inertiaii{22} \cdot \inertiaii{13} & 0 		& \inertiaii{11} \cdot \inertiaii{22}
+	\end{pmatrix}
+	\\[1.5em]
+	&= \begin{pmatrix}
+	\dfrac{\inertiaii{33}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} & 0 & -\dfrac{\inertiaii{13}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} \\
+	0  & \dfrac{1}{\inertiaii{22}} & 0 \\
+	-\dfrac{\inertiaii{13}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2} & 0 & \dfrac{\inertiaii{11}}{\inertiaii{11} \cdot \inertiaii{33} - \inertiaii{13}^2}
+	\end{pmatrix}
+\end{align*}
+\clearpage

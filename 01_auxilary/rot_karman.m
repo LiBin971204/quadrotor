@@ -1,5 +1,5 @@
 function [vAngularVelOut, mRotKarman] = rot_karman( vAngularVelIn, eulerAngles, direction)
-% function [mRotEuler, mRotKarman] = rot_karman( eulerAngle, direction )
+% function [vAngularVelOut, mRotKarman] = rot_karman( vAngularVelIn, eulerAngle, direction )
 %
 %   Author1     : 
 % 
@@ -7,14 +7,14 @@ function [vAngularVelOut, mRotKarman] = rot_karman( vAngularVelIn, eulerAngles, 
 %
 %   Description : Rotates the angular velocity vector by using euler angles
 %
-%   Parameters  : vAnularVelIn -> Vector of angular velocities that is to 
+%   Parameters  : vAngularVelIn -> Vector of angular velocities that is to 
 %                                 be rotated
 %                 eulerAngles -> Vector containing euler angles
 %                 direction -> Containts information whether rotate to
 %                              "to-body-frame" or "to-inertial-frame"
 % 
 %   Return      : vAngularVelOut -> Rotated vector
-%                 mRotKarman -> Euler rotation matrix
+%                 mRotKarman -> Karman rotation matrix
 %
 %-------------------------------------------------------------------------%
 

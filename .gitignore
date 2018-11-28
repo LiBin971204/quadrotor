@@ -1,9 +1,24 @@
-05_data/*
-06_identification/*
-08_docs/*
-09_temp/*
+# Exclude content of work dir
 10_work/*
 
+# Exclude measurement data
+05_data/*
+
+# Keep folder only if they contain .gitkeep file
 !.gitkeep
 
+# Exclude gitignore file
 .gitignore
+
+# Exclude compiled files
+*.mexw64
+
+# Exclude local dir
+09_temp/*
+
+# Exclude temporary tex files
+*.aux
+*.log
+*.gz
+*.toc
+*.out

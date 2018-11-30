@@ -54,17 +54,18 @@ else
     I    = Par_mdlQuad.I;
     g    = Par_mdlQuad.g;
     m    = Par_mdlQuad.m;
-    l    = Par_mdlQuad.l;
+    l    = Par_mdlQuad.armLength;
     sphi = sin(phi);
     cphi = cos(phi);
     sthe = sin(theta);
     cthe = cos(theta);
     spsi = sin(psi);
     cpsi = cos(psi);
+    
     %TODO: Get info about torque
     dm1  = Par_mdlQuad.gamma;
-    dm2  = Par_mdlQuad.gamma;
-    dm3  = -Par_mdlQuad.gamma;
+    dm2  = -Par_mdlQuad.gamma;
+    dm3  = Par_mdlQuad.gamma;
     dm4  = -Par_mdlQuad.gamma;
 
 

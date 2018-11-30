@@ -12,6 +12,7 @@ function Par = mdl_control_lqr_par( SystemDynamics )
 %
 %-------------------------------------------------------------------------%
 
+% Extract necessary values
 A = SystemDynamics.mA;
 B = SystemDynamics.mB;
 

@@ -1,5 +1,5 @@
 function Dyn = aux_setDynamics( dynamics )
-% function Dyn = aux_setDynamics( dynamics )
+% Dyn = aux_setDynamics( dynamics )
 %
 %   Author1     :
 % 
@@ -7,9 +7,9 @@ function Dyn = aux_setDynamics( dynamics )
 %
 %   Description : Create a Struct containing the system dynamics of the 
 %                 model indicated by dynamics (the model must comply with 
-%                 the naming convection
+%                 the naming convention)
 %
-%   Parameters  : dynamics -> Name of the system model
+%   Parameters  : dynamics -> String containing name of the system model
 % 
 %   Return      : Dyn -> Struct containing the system dynamics
 % 

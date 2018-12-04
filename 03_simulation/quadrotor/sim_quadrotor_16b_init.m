@@ -18,12 +18,12 @@ Par_filterMadgwick = mdl_filter_madgwick_par();
 Par_actuator = mdl_actuator_thrust_par();
 
 % Set linearized system dynamics
-x0           = [0;0;1;zeros(9,1)];
-u0           = Par_mdlQuad.m*Par_mdlQuad.g/4*ones(4,1);
-sysDyn_lin   = mdl_quadrotor_dynamicsLin(x0, u0, Par_mdlQuad);
+x0         = [0;0;0;zeros(9,1)];
+u0         = Par_mdlQuad.m*Par_mdlQuad.g/4*ones(4,1);
+SysDynLin  = mdl_quadrotor_dynamicsLin(x0, u0, Par_mdlQuad);
 
 % Load complementary filter parameters
-Par_control_pd = mdl_control_pd_par( sysDyn_lin.mB );
+Par_control_pd = mdl_control_pd_par( SysDynLin.mB, Par_mdlQuad );
 
 
-clear x0 u0 sysDyn_lin
+clear x0 u0 SysDynLin

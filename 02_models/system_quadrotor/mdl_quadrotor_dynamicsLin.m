@@ -1,4 +1,4 @@
-function [DynamicsLin, varargout] = mdl_quadrotor_dynamicsLin( x0, u0, Par_mdlQuad )
+function [DynamicsLin, varargout] = mdl_quadrotor_dynamicsLin( x0, u0, ParMdlQuad )
 % function [DynamicsLin, varargout] = mdl_quadrotor_dynamicsLin( x0, Par_mdlQuad )
 %
 %   Date        : Winter 2018
@@ -17,9 +17,10 @@ function [DynamicsLin, varargout] = mdl_quadrotor_dynamicsLin( x0, u0, Par_mdlQu
 
 if nargin==0
     % Set system size for query
-    Ode.Size.n_states  = 12;
-    Ode.Size.n_inputs = 4;
-    Ode.Size.n_outputs = 3;
+    Ode.Size.tates           = 12;
+    Ode.Size.inputs          = 4;
+    Ode.Size.outputs         = 3;
+    Ode.Size.parameters      = 0;
     Ode.Info.manipulatedVars = {'thrust_motor1'; 'thrust_motor2'; ...
                                 'thrust_motor3'; 'thrust_motor4'};
     Ode.Info.systemStates    = {'x_geodetic'; 'y_geodetic'; 'z_geodetic'; ...
@@ -51,10 +52,10 @@ else
     r       = x0(12);
     
     % Use intermediate values
-    I    = Par_mdlQuad.I;
-    g    = Par_mdlQuad.g;
-    m    = Par_mdlQuad.m;
-    l    = Par_mdlQuad.armLength;
+    I    = ParMdlQuad.I;
+    g    = ParMdlQuad.g;
+    m    = ParMdlQuad.m;
+    L    = ParMdlQuad.armLength;
     sphi = sin(phi);
     cphi = cos(phi);
     sthe = sin(theta);
@@ -63,16 +64,16 @@ else
     cpsi = cos(psi);
     
     %TODO: Get info about torque
-    dm1  = Par_mdlQuad.gamma;
-    dm2  = -Par_mdlQuad.gamma;
-    dm3  = Par_mdlQuad.gamma;
-    dm4  = -Par_mdlQuad.gamma;
+    dm1  = ParMdlQuad.gamma;
+    dm2  = ParMdlQuad.gamma;
+    dm3  = ParMdlQuad.gamma;
+    dm4  = ParMdlQuad.gamma;
 
 
     % Calculate A
-    dfdx_geo = zeros(12, 3);
+    dfdxGeo = zeros(12, 3);
     
-    dfdv_rel ...
+    dfdvBody ...
         = [cthe*cpsi    sphi*sthe*cpsi-cphi*spsi  cphi*sthe*cpsi+sphi*spsi;
            cthe*spsi    sphi*sthe*spsi+cphi*cpsi  cphi*sthe*spsi-sphi*cpsi;
                -sthe                   sphi*cthe                 cphi*cthe;
@@ -81,7 +82,7 @@ else
                    q                          -p                         0;
                                        zeros(6,3)                         ];
        
-    dfdeuler ...
+    dfdeulerAngles ...
         = [(sphi*spsi+cphi*sthe*cpsi)*v+(cphi*spsi-sphi*sthe*cpsi)*w ...
            -sthe*cpsi*u+sphi*cthe*cpsi*v+cphi*cthe*cpsi*w ...
            -cthe*spsi*u-(cphi*cpsi+sphi*sthe*spsi)*v+(sphi*cpsi-cphi*sthe*spsi)*w; ...
@@ -97,7 +98,7 @@ else
             cphi/cthe*q-sphi/cthe*r    sphi/cthe^2*sthe*q+cphi/cthe^2*sphi*r 0
             zeros(3,3) ];
         
-    dfdomega ...
+    dfdomegaBody ...
         = [                                    zeros(3,3);
                                    0                   -w                    v;
                                    w                    0                   -u;
@@ -105,21 +106,21 @@ else
                                    1      sphi*tan(theta)      cphi*tan(theta);
                                    0                 cphi                -sphi;
                                    0            sphi/cthe            cphi/cthe;
-          Par_mdlQuad.invI*...
+          ParMdlQuad.invI*...
           [  -I(3,1)*p+I(2,1)*r                    -I(3,2)*q-I(3,1)*p+(I(2,2)-I(3,3))*r I(2,1)*p+(I(2,2)-I(3,3))*q+2*I(2,3)*r
             2*I(3,1)*p+I(3,2)*q+(I(3,3)-I(1,1))*r                    -I(1,2)*r+I(3,2)*p (I(3,3)-I(1,1))*p-I(1,2)*q-2*I(1,2)*r
            -2*I(2,1)*p+(I(1,1)-I(2,2))*q-I(2,3)*r (I(1,1)-I(2,2))*p+2*I(1,2)*q+I(1,3)*r -I(2,3)*p+I(1,3)*q]];
        
-    DynamicsLin.mA = [dfdx_geo dfdv_rel dfdeuler dfdomega];
+    DynamicsLin.mA = [dfdxGeo dfdvBody dfdeulerAngles dfdomegaBody];
     
     % Calculate B
     DynamicsLin.mB = [zeros(5,4)
           1/m*ones(1,4)
           zeros(3,4)
-          Par_mdlQuad.invI*...
-          [l    0   -l    0 
-           0    l    0   -l
-           dm1 dm2 dm3 dm4]];
+          ParMdlQuad.invI*...
+          [ 0    L    0   -L 
+           -L    0    L    0
+           dm1 -dm2 dm3 -dm4]];
       % TODO: Adapt thrust direction to notes
     
     % Set C

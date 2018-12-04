@@ -394,7 +394,35 @@ For the purpose of control design, the bldc dynamics are assumed sufficiently fa
 \clearpage
 
 \subsection{Controller - Kalman filter}
-. 
+\begin{align*}
+	\begin{pmatrix} 
+		\dot{u} \\
+		\dot{v} \\
+		\dot{w} 
+	\end{pmatrix} &= \begin{pmatrix}
+		\ctheta \cdot \cpsi & \ctheta \cdot \spsi & - \stheta
+		\\
+		\sphi\cdot \stheta \cdot \cpsi - \cphi \cdot \spsi & \sphi \cdot \stheta \cdot \spsi + \cphi \cdot \cpsi & \sphi \cdot \ctheta
+		\\
+		\cphi \cdot \stheta \cdot \cpsi +\sphi \cdot \spsi & \cphi \cdot \stheta \cdot \spsi - \sphi \cdot \cpsi & \cphi \cdot \ctheta
+	\end{pmatrix} \cdot \begin{pmatrix}
+		0 \\
+		0 \\
+		-g 
+	\end{pmatrix}
+	\\
+	&= \begin{pmatrix}
+		\stheta \\
+		-\sphi \cdot \ctheta \\
+		-\cphi \cdot \ctheta 
+	\end{pmatrix} \cdot g
+	\\
+	\Rightarrow \tan{\Phi} &= \dfrac{\dot{v}}{\dot{w}}
+	\\
+	\Rightarrow \dot{v}^2 + \dot{w}^2 &= \ctheta^2 \cdot g^2
+	\\
+	\Rightarrow \tan{\Theta} &= \dfrac{\dot{u}}{\sqrt{\dot{v}^2+\dot{w}^2}}
+\end{align*}
 Show observer simulation results and results based on measurement data (in comparison to madgwick).
 \clearpage
 

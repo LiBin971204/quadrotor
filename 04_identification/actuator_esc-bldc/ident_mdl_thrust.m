@@ -151,7 +151,10 @@ legend('Measured data', 'Polynomial fit')
 
 clear pwm_steadyState mass_steadyState ii jj ind limits buff ...
       offset_outputThrust
-
+% TODO: plot original vs postprocessed in 1 figure, 2 subplots
+% TODO: Plot static thrust curve and get inverse in one figure
+% TODO: Seperate between mdl_act_inputNonlinearity, mdl_act_dynamics
+% and mdl_act_staticMapInverse
 %-------------------------------------------------------------------------%
 
 
@@ -295,7 +298,7 @@ grid on
 xlabel('PWM in -')
 ylabel('Mass in kg')
 title('Static map')
-legend('Polynomial fit', 'Estimated input nonlinearity*55', 'location', 'northwest')
+legend('Polynomial fit', 'Estimated input nonlinearity/(a0+a1)/g', 'location', 'northwest')
 
 clear ii fid ans coefs
 

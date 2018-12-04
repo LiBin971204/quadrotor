@@ -42,13 +42,13 @@ end
 %                          Define dynamic system                          %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Define symbolic variables in SI units
-x   = MX.sym('x', Dyn.Size.n_states); 
-u   = MX.sym('u', Dyn.Size.n_inputs);
+x   = MX.sym('x', Dyn.Size.states); 
+u   = MX.sym('u', Dyn.Size.inputs);
 
 
-if Dyn.Size.n_onlineParameter > 0
-    par = MX.sym('onlineParameter', Dyn.Size.n_onlineParameter);
-    for ii = 1:Dyn.Size.n_onlineParameter
+if Dyn.Size.parameters > 0
+    par = MX.sym('onlineParameter', Dyn.Size.parameters);
+    for ii = 1:Dyn.Size.parameters
         fieldName = strsplit(Dyn.Info.onlineParameter{ii});
         parMdl.(fieldName{1}) = par(ii);
     end
@@ -61,13 +61,13 @@ switch Dyn.type
         % Discrete: xk1 = f(xk, pk, uk), yk = g(xk, pk, uk) and h(xk, pk, uk) = 0
         
         % Define algebraic variables in SI units
-        p   = MX.sym('p', Dyn.Size.n_algebraicVars);
+        p   = MX.sym('p', Dyn.Size.algebraicVars);
         
         % Get system dynamics
         eval(['[f, g, h] = ' dynamics '_dynamics(x, p, u, parMdl);']);
         
         % Define functions and store in struct
-        if Dyn.Size.n_onlineParameter > 0
+        if Dyn.Size.parameters > 0
             Dyn.systemDynamics ...
                 = Function([Dyn.name '_systemDynamics'], ...
                   {    x   ,     p    ,     u   ,      par    }, {      f         }, ...
@@ -110,7 +110,7 @@ switch Dyn.type
         eval(['[f, g] = ' dynamics '_dynamics(x, u, parMdl);']);
         
         % Define functions and store in struct
-        if Dyn.Size.n_onlineParameter > 0
+        if Dyn.Size.parameters > 0
             Dyn.systemDynamics ...
                 = Function([Dyn.name '_systemDynamics'], ...
                   {    x   ,     u   ,      par    }, {      f         }, ...

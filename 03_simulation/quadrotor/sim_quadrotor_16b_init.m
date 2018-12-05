@@ -15,7 +15,7 @@ Par_filterKalman = mdl_filter_kalmanIntegration_par();
 Par_filterMadgwick = mdl_filter_madgwick_par();
 
 % Load esc-bldc parameter
-Par_actuator = mdl_actuator_thrust_par();
+Par_actuator = mdl_actuator_dynamics_par();
 
 % Set linearized system dynamics
 x0         = [0;0;0;zeros(9,1)];

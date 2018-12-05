@@ -1,5 +1,5 @@
-function Par = mdl_actuator_thrust_par( ) 
-% function Par = mdl_actuator_thrust_par( ) 
+function Par = mdl_actuator_dynamics_par( ) 
+% function Par = mdl_actuator_dynamics_par( ) 
 %
 %   Author1     : 
 %

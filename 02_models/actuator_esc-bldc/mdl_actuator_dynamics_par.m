@@ -16,5 +16,6 @@ function Par = mdl_actuator_dynamics_par( )
 %
 %-------------------------------------------------------------------------%
 
-Par.linearModelCoefs = [1; -0.68932];
-Par.sampleTime = 0.1;
+Par.linearModelCoefs = [1; -0.99548];
+Par.sampleTime = 0.001;
+Par.sLaplace = 1/0.001*log(--0.99548/1);

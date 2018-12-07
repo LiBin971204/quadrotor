@@ -14,8 +14,8 @@ Specs.functionNames = {'mdl_actuator_staticMapInverse', ...
                         'mdl_actuator_dynamics', ...
                         'mdl_actuator_staticMap'};
 Specs.date          = '2018-07-04';
-Specs.sampleTime    = 0.004;
-Specs.sampleTime    = 0.1;
+Specs.sampleTime    = 0.001;
+% Specs.sampleTime    = 0.1;
 Dirs.loadData       = ['05_data/a_measurement/ident_esc-bldc_' Specs.date '/'];
 Dirs.saveFun        = '02_models/actuator_esc-bldc/';
 
@@ -387,7 +387,9 @@ fprintf(fid, '%%\n');
 fprintf(fid, '%%-------------------------------------------------------------------------%%\n\n');
 fprintf(fid, ['Par.linearModelCoefs = [' num2str(coefs(1)) '; ' ...
                                          num2str(coefs(2)) '];\n']);
-fprintf(fid, ['Par.sampleTime = ' num2str(MatlabIdent.identifiedModel.Ts) ';']);
+fprintf(fid, ['Par.sampleTime = ' num2str(MatlabIdent.identifiedModel.Ts) ';\n']);
+fprintf(fid, ['Par.sLaplace = 1/' num2str(MatlabIdent.identifiedModel.Ts) ...
+               '*log(-' num2str(coefs(2)) '/' num2str(coefs(1)) ');']);
 fclose(fid);
 
 

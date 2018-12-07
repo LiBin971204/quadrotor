@@ -22,7 +22,10 @@ gam  = ParMdlQuad.gamma;
 invE = 1/4*[1 0 -2 1; 1 2 0 -1; 1 0 2 1; 1 -2 0 -1];
 
 % PD-Control parameters 
-Par.k    = [25; 10];
+% Par.kp   = 25;
+% Par.kd   = 10;
+Par.kp   = 12.25;
+Par.kd   = 7;
 Par.B    = B;
 Par.Binv = B^-1; % Numeric result
 Par.Binv = invE * [1 0 0 0; 0 1/L 0 0; 0 0 1/L 0; 0 0 0 1/gam] * ...

@@ -9,9 +9,6 @@ Par_mdlQuad = mdl_quadrotor_par();
 % Load kalman filter parameters
 Par_filterKalman = mdl_filter_kalmanIntegration_par();
 
-% Load complementary filter parameters
-Par_filterMadgwick = mdl_filter_madgwick_par();
-
 % Load esc-bldc parameter
 ParMdl_actuator = mdl_actuator_dynamics_par();
 

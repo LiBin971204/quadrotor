@@ -3,7 +3,7 @@ function [vOut, mRotEuler] = rot_euler( vIn, eulerAngles, direction, convention)
 %
 %   Author1     : 
 % 
-%   Date        : Winter 2018
+%   Last change : Spring 2019
 %
 %   Description : Rotates the vector vIn by using euler angles with 
 %                 specified sequence to body or to inertial frame
@@ -46,10 +46,12 @@ switch convention
         
         switch direction
             case 'to-body-frame'
-                vOut = mRotEuler_toBody * vIn;
-
+                mRotEuler = mRotEuler_toBody;
+                vOut = mRotEuler * vIn;
+                
             case 'to-inertial-frame'
-                vOut = mRotEuler_toBody.' * vIn;
+                mRotEuler = mRotEuler_toBody.';
+                vOut = mRotEuler * vIn;
                 
         end
         

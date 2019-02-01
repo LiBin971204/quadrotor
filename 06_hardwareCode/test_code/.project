@@ -3,6 +3,7 @@
 	<name>test_code</name>
 	<comment></comment>
 	<projects>
+		<project>ctrl_tilt</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -28,7 +29,7 @@
 		<link>
 			<name>src</name>
 			<type>2</type>
-			<location>C:/Users/Nu/Documents/01_Fachlich/14_quadrotor/04_hardwareCode/ctrl_tilt/src</location>
+			<location>C:/Users/Nu/Documents/01_Fachlich/14_quadrotor/06_hardwareCode/ctrl_tilt/src</location>
 		</link>
 	</linkedResources>
 </projectDescription>

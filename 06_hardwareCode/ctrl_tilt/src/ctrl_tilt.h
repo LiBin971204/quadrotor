@@ -1,13 +1,4 @@
-/*
- * ctrl_tilt.h
- *
- *  Created on: 13.10.2018
- *      Author: Nu
- */
-
-#ifndef INCLUDES_CTRL_TILT_H_
-#define INCLUDES_CTRL_TILT_H_
-
+#pragma once
 
 #define sampleTime 0.004
 #define PIN_CLK 6
@@ -38,5 +29,3 @@ double B[2] = {sampleTime, 0};
 double C[2] = {1, 0};
 double L[2] = {0.0258, -0.0221};
 */
-
-#endif /* INCLUDES_CTRL_TILT_H_ */

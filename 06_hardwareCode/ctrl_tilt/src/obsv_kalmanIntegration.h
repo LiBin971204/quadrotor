@@ -1,12 +1,4 @@
-/*
- * obsv_kalmanIntegration.h
- *
- *  Created on: 13.10.2018
- *      Author: Nu
- */
-
-#ifndef INCLUDES_OBSV_KALMANINTEGRATION_H_
-#define INCLUDES_OBSV_KALMANINTEGRATION_H_
+#pragma once
 
 #include "ctrl_tilt.h"
 #include <math.h>
@@ -17,5 +9,3 @@ void filterKalman(double& udot, double& vdot, double& wdot, double& roll_meas,
 
 
 //int filterKalman(double* states, double* outputMeasured, double* ctrlInput, double* outputEstimated);
-
-#endif /* INCLUDES_OBSV_KALMANINTEGRATION_H_ */

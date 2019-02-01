@@ -1,9 +1,9 @@
 function [vAngularVelOut, mRotKarman] = rot_karman( vAngularVelIn, eulerAngles, direction)
 % function [vAngularVelOut, mRotKarman] = rot_karman( vAngularVelIn, eulerAngle, direction )
 %
-%   Author1     : 
+%   Author1     : enu89
 % 
-%   Date        : Winter 2018
+%   Last change : Spring 2019
 %
 %   Description : Rotates the angular velocity vector by using euler angles
 %
@@ -17,7 +17,6 @@ function [vAngularVelOut, mRotKarman] = rot_karman( vAngularVelIn, eulerAngles, 
 %                 mRotKarman -> Karman rotation matrix
 %
 %-------------------------------------------------------------------------%
-
 % Get euler angels
 phi     = eulerAngles(1);
 theta   = eulerAngles(2);

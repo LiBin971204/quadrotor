@@ -1,0 +1,58 @@
+\section{Implementation}
+Avoid matrix multiplications. Eq.~\ref{eq:inverseStateSpaceInput}.
+\begin{align*}
+	\vec{F} &= \dfrac{1}{4}\begin{pmatrix}
+	1 &  0 & -2 &  1 \\
+	1 &  2 &  0 & -1 \\
+	1 &  0 &  2 &  1 \\
+	1 & -2 &  0 & -1
+	\end{pmatrix}
+	\cdot
+	\begin{pmatrix}
+	1 & 0 & 0 & 0 \\
+	0 & \dfrac{1}{l} & 0 & 0 \\
+	0 & 0 & \dfrac{1}{l} & 0 \\
+	0 & 0 & 0 & \dfrac{\text{d}F}{\text{d}M}
+	\end{pmatrix} \cdot
+	\begin{pmatrix}
+	m & 0 \\
+	0 & \Theta
+	\end{pmatrix} \cdot \vec{u}
+	\\
+	&= \dfrac{1}{4}\begin{pmatrix}
+	1 &  0 & -2 &  1 \\
+	1 &  2 &  0 & -1 \\
+	1 &  0 &  2 &  1 \\
+	1 & -2 &  0 & -1
+	\end{pmatrix} 
+	\cdot 
+	\begin{pmatrix}
+	m & 0 & 0 & 0 \\
+	0 & \dfrac{\theta_{11}}{l} & 0 & 0 \\
+	0 & 0 & \dfrac{\theta_{22}}{l} & 0 \\
+	0 & 0 & 0 & \dfrac{\text{d}F}{\text{d}M} \cdot \theta_{33}
+	\end{pmatrix} \cdot \vec{u}
+	\\
+	&= \frac{1}{4} \cdot 
+	\begin{pmatrix}
+		m & 0 & -2\cdot \dfrac{\theta_{22}}{l} & \frac{\text{d}F}{\text{d}M} \cdot \theta_{33}
+		\\
+		m & 2\cdot \dfrac{\theta_{11}}{l} & 0 & -\frac{\text{d}F}{\text{d}M} \cdot \theta_{33}
+		\\
+		m & 0 & 2\cdot \dfrac{\theta_{22}}{l} & \frac{\text{d}F}{\text{d}M} \cdot \theta_{33}
+		\\
+		m & -2\cdot \dfrac{\theta_{11}}{l} & 0 & -\frac{\text{d}F}{\text{d}M} \cdot \theta_{33}
+	\end{pmatrix} \cdot \vec{u}
+	\\
+	&= \frac{1}{4}\cdot \begin{pmatrix}
+		m\cdot u_1 - 2\cdot \dfrac{\theta_{22}}{l} \cdot u_3 + \frac{\text{d}F}{\text{d}M} \cdot \theta_{33} \cdot u_4 
+		\\
+		m\cdot u_1 + 2\cdot \dfrac{\theta_{11}}{l} \cdot u_2 - \frac{\text{d}F}{\text{d}M} \cdot \theta_{33} \cdot u_4
+		\\
+		m\cdot u_1 + 2\cdot \dfrac{\theta_{22}}{l} \cdot u_3 + \frac{\text{d}F}{\text{d}M} \cdot \theta_{33} \cdot u_4
+		\\
+		m\cdot u_1 - 2\cdot \dfrac{\theta_{11}}{l} \cdot u_2 - \frac{\text{d}F}{\text{d}M} \cdot \theta_{33} \cdot u_4
+	\end{pmatrix} 
+\end{align*}
+
+\clearpage

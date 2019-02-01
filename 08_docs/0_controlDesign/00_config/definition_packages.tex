@@ -1,0 +1,19 @@
+\usepackage{amsmath}   				% Math environments (equation, align, ..)
+\usepackage{graphicx}  				% Including pictures (includegraphics, ...)
+\usepackage{tabularx} 				% Table
+\usepackage{siunitx} 				% \si command
+\usepackage[hidelinks]{hyperref}	% For linked table of contents (toc)
+\newlength\tindent 					% Rename parident to tindent
+\setlength{\tindent}{\parindent}	
+\setlength{\parindent}{0pt} 		% Disable indent
+\usepackage[skip=-1em]{caption} 	% Reduce distance between image and caption
+\renewcommand{\labelitemi}{$-$}		% Less space between items in itemize env
+\setcounter{MaxMatrixCols}{20} 		% Set \begin{matrix} to max 20 columns
+
+%-------------------%
+\ifx \makeSlides\defined
+\usepackage[left=2cm, right=2cm, top=2cm,bottom=2cm]{geometry} % Set page margins	
+\else
+\usepackage{00_config/documentStyle_slides}	% Use slide format template (sets xcolor)
+\fi
+%-------------------%

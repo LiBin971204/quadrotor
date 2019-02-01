@@ -3,7 +3,7 @@ function Dyn = aux_setDynamics( dynamics )
 %
 %   Author1     :
 % 
-%   Date        : Winter 2018
+%   Last change : Winter 2018
 %
 %   Description : Create a Struct containing the system dynamics of the 
 %                 model indicated by dynamics (the model must comply with 
@@ -19,9 +19,9 @@ import casadi.*
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%-------------------------------------------------------------------------%
 %                          Set model parameters                           %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%-------------------------------------------------------------------------%
 cmd_loadParameters  = ['parMdl = ' dynamics '_par();']; 
 eval(cmd_loadParameters);    % Load parameters
 switch nargout([dynamics '_dynamics'])
@@ -38,9 +38,9 @@ end
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%-------------------------------------------------------------------------%
 %                          Define dynamic system                          %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%-------------------------------------------------------------------------%
 % Define symbolic variables in SI units
 x   = MX.sym('x', Dyn.Size.states); 
 u   = MX.sym('u', Dyn.Size.inputs);

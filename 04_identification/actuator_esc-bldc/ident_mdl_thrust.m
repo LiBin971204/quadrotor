@@ -1,11 +1,12 @@
 clear; close all; clc;
+%-------------------------------------------------------------------------%
 % Identification of the electronic speed controller (esc) and brushless
 % direct current motor (bldc) unit. Measured data: pwm signal and resulting
 % Wäge-sensor voltage. Wägesensor calibration data is also stored. 
 %
-%   Author1     : 
+%   Author1     : enu89
 %
-%   Date        : Winter 2018
+%   Last change : Winter 2018
 %
 %-------------------------------------------------------------------------%
 % Set options

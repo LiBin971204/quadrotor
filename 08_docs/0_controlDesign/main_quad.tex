@@ -1,33 +1,12 @@
 \documentclass[12pt,a4paper, dvipsnames]{article}
 
-\usepackage{amsmath}   				% Math environments (equation, align, ..)
-\usepackage{graphicx}  				% Including pictures (includegraphics, ...)
-\usepackage{tabularx} 				% Table
-\usepackage{siunitx} 				% \si command
-\usepackage[hidelinks]{hyperref}	% For linked table of contents (toc)
-\newlength\tindent 					% Rename parident to tindent
-\setlength{\tindent}{\parindent}	
-\setlength{\parindent}{0pt} 		% Disable indent
-\usepackage[skip=-1em]{caption} 	% Reduce distance between image and caption
-\renewcommand{\labelitemi}{$-$}		% Less space between items in itemize env
-\setcounter{MaxMatrixCols}{20} 		% Set \begin{matrix} to max 20 columns
-
-
-% Toggle between text and slide mode
+% Toggle between text and slide mode (commented in - Slides | commented out - No slides)
 \def \makeSlides {}
-%-------------------%
-\ifx \makeSlides\defined
-	\usepackage[left=2cm, right=2cm, top=2cm,bottom=2cm]{geometry} % Set page margins	
-\else
-	\usepackage{02_design/slides}	% Use slide format template (sets xcolor)
-\fi
-%-------------------%
 
+\input{00_config/definition_packages}
 
-% Facilitate writing
-\input{00_sections/11_ownCommands/ownCommands}
-
-
+% Define own macros
+\input{00_config/definition_macros}
 
 
 
@@ -35,11 +14,12 @@
 	\tableofcontents
 	\clearpage
 	
-	\input{00_sections/00_controlDesign/controlDesign}
+	\input{01_sections/00_controlDesign/controlDesign}
 	
 		
 	\appendix
-	\input{00_sections/10_appendix/fund_coordinateSystems}
-	\input{00_sections/10_appendix/fund_eulerAngles}
-	\input{00_sections/10_appendix/misc}
+	\input{01_sections/10_appendix/fund_coordinateSystems}
+	\input{01_sections/10_appendix/fund_eulerAngles}
+	\input{01_sections/10_appendix/implementation}
+	\input{01_sections/10_appendix/misc}
 \end{document}

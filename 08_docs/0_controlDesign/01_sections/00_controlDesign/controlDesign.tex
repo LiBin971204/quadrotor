@@ -28,12 +28,27 @@
 \subsection{Control Objectives}
 1. Tilt control \\
 2. Height control 
+
+\begin{figure}[htb!]
+	\centering
+	\includegraphics[width=0.7\textwidth]{02_figures/intro_overallGoal}
+	\caption{General control aim}
+	\label{fig:intro_overallGoal}
+\end{figure}
+
+\begin{figure}[htb!]
+	\centering
+	\includegraphics[width=0.7\textwidth]{02_figures/intro_currentGoal}
+	\caption{General control aim}
+	\label{fig:intro_currentGoal}
+\end{figure}
+
 \clearpage
 
 \subsection{System Model}
 \begin{figure}[htb!]
 	\centering
-	\includegraphics[width=0.7\textwidth]{01_figures/intro_basicSystem}
+	\includegraphics[width=0.7\textwidth]{02_figures/intro_basicSystem}
 	\caption{Basic system structure}
 	\label{fig:intro_basicSystem}
 \end{figure}
@@ -41,7 +56,7 @@
 
 \begin{figure}[htb!]
 	\centering
-	\includegraphics[width=0.5\textwidth]{01_figures/intro_cosChoice}
+	\includegraphics[width=0.5\textwidth]{02_figures/intro_cosChoice}
 	\caption{Choice of coordinate system}
 	\label{fig:intro_cos}
 \end{figure}
@@ -147,14 +162,14 @@ The esc's and bldc is identified using following input sequence and resulting fo
 
 \begin{figure}[htb!]
 	\centering
-	\includegraphics[width=0.7\textwidth]{01_figures/mdl_bldcIdent}
+	\includegraphics[width=0.7\textwidth]{02_figures/mdl_bldcIdent}
 	\caption{ESC + BLDC Unit - Measured input output behaviour}
 	\label{fig:mdl_bldcIdent}
 \end{figure}
 
 \begin{figure}[htb!]
 	\centering
-	\includegraphics[width=0.5\textwidth]{01_figures/mdl_hammerstein}
+	\includegraphics[width=0.5\textwidth]{02_figures/mdl_hammerstein}
 	\caption{Hammerstein model structure}
 	\label{fig:mdl_hammerstein}
 \end{figure}
@@ -289,7 +304,7 @@ Add overview of sensor and actuator placement.
 \subsection{Control Configuration}
 \begin{figure}[htb!]
 	\centering
-	\includegraphics[width=0.7\textwidth]{01_figures/controlStructure}
+	\includegraphics[width=0.7\textwidth]{02_figures/controlStructure}
 	\caption{Control structure}
 	\label{fig:controlStructure}
 \end{figure}
@@ -344,7 +359,8 @@ By reformulating Eq.~\ref{eq:mdl_linearized} as
 	\Rightarrow	s_{1/2} &= -\dfrac{k_d}{2}
 \end{align*}
 In order to obtain $\vec{F}$ or $E$ can be inverted numerically or the following reformulation can be used
-\begin{align*}
+\begin{align}
+\begin{split}
 	\begin{pmatrix}
 		u_1 \cdot m \\
 		\Theta \cdot \begin{pmatrix} u_2 \\ u_3 \\ u_4 \end{pmatrix}
@@ -369,9 +385,9 @@ In order to obtain $\vec{F}$ or $E$ can be inverted numerically or the following
 	\\
 	\begin{pmatrix}
 		1 & 0 & 0 & 0 \\
-		0 & \frac{1}{l} & 0 & 0 \\
-		0 & 0 & \frac{1}{l} & 0 \\
-		0 & 0 & 0 & \frac{\text{d}F}{\text{d}M}
+		0 & \dfrac{1}{l} & 0 & 0 \\
+		0 & 0 & \dfrac{1}{l} & 0 \\
+		0 & 0 & 0 & \dfrac{\text{d}F}{\text{d}M}
 	\end{pmatrix} \cdot
 	\begin{pmatrix}
 		m & 0 \\
@@ -384,7 +400,8 @@ In order to obtain $\vec{F}$ or $E$ can be inverted numerically or the following
 		1 &  0 &  2 &  1 \\
 		1 & -2 &  0 & -1
 	\end{pmatrix}
-\end{align*} 
+\end{split} \label{eq:inverseStateSpaceInput}
+\end{align} 
 $\tilde{\vec{u}}$ are multiplied by the mass $m$ and inertia matrix $\Theta$, respectively, and  is applied. If $\Psi$ is not to be explicitely controlled $u_4$, it can be tried to simply set it to $\sum M_i = 0$.
 For the purpose of control design, the bldc dynamics are assumed sufficiently fast and only the nonlinearity is considered. The static gain of the transfer function for a step response is $K = \dfrac{b_0}{a_0 - a_1}$.
 \clearpage
